@@ -1,0 +1,4 @@
+shone.phar
+composer.lock
+vendor/*
+build

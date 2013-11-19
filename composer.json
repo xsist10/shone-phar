@@ -1,0 +1,41 @@
+{
+    "name": "shone/scanner",
+    "description": "Software Version Scanner",
+    "keywords": ["version", "scanner", "security", "vulnerability"],
+    "homepage": "https://www.shone.co.za/",
+    "type": "tool",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Thomas Shone",
+            "email": "thomas@shone.co.za",
+            "homepage": "https://www.shone.co.za"
+        }
+    ],
+    "support": {
+        "irc": "security@shone.co.za",
+        "issues": "https://github.com/xsist10/shone-scanner/issues"
+    },
+    "require": {
+        "php": ">=5.3.2",
+        "symfony/console": "~2.3@dev",
+        "symfony/finder": "~2.1",
+        "symfony/process": "~2.1@dev",
+        "shuber/curl": "dev-master"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~3.7.10"
+    },
+    "suggest": {
+        "ext-zip": "Enabling the zip extension allows you gzip compression of all internet traffic"
+    },
+    "autoload": {
+        "psr-0": { "Shone": "src/" }
+    },
+    "bin": ["bin/shone"],
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+    }
+}
