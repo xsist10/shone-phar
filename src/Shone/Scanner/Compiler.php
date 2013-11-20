@@ -42,7 +42,7 @@ class Compiler
             unlink($pharFile);
         }
 
-        $this->version = '1.0';
+        $this->version = '1.0.0';
 
         $phar = new \Phar($pharFile, 0, 'shone.phar');
         $phar->setSignatureAlgorithm(\Phar::SHA1);
@@ -65,16 +65,22 @@ class Compiler
         }
         $this->addFile($phar, new \SplFileInfo(__DIR__ . '/Console/Application.php'), false);
 
-        // Add all symfony dependencies
-        $finder = new Finder();
-        $finder->files()
-            ->ignoreVCS(true)
-            ->name('*.php')
-            ->exclude('Tests')
-            ->in(__DIR__.'/../../../vendor/symfony/')
-        ;
-        foreach ($finder as $file) {
-            $this->addFile($phar, $file);
+        // Add all vendor dependencies
+        foreach (array('symfony', 'shuber') as $vendor)
+        {
+            $finder = new Finder();
+            $finder->files()
+                ->ignoreVCS(true)
+                ->name('*.php')
+                ->name('*.json')
+                ->exclude('Tests')
+                ->exclude('tests')
+                ->exclude('test')
+                ->in(__DIR__.'/../../../vendor/' . $vendor . '/')
+            ;
+            foreach ($finder as $file) {
+                $this->addFile($phar, $file);
+            }
         }
 
         // Add autoloading files
@@ -83,6 +89,7 @@ class Compiler
         $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../../vendor/composer/autoload_namespaces.php'));
         $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../../vendor/composer/autoload_classmap.php'));
         $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../../vendor/composer/autoload_real.php'));
+        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../../vendor/composer/autoload_files.php'));
         if (file_exists(__DIR__.'/../../../vendor/composer/include_paths.php')) {
             $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../../vendor/composer/include_paths.php'));
         }
