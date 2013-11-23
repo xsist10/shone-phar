@@ -12,6 +12,7 @@ namespace Shone\Scanner;
 
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\Process;
+use Shone\Scanner\Config;
 
 /**
  * The Compiler class compiles shone into a phar
@@ -42,7 +43,8 @@ class Compiler
             unlink($pharFile);
         }
 
-        $this->version = '1.0.0';
+        $config = new Config();
+        $this->version = $config->get('version');
 
         $phar = new \Phar($pharFile, 0, 'shone.phar');
         $phar->setSignatureAlgorithm(\Phar::SHA1);

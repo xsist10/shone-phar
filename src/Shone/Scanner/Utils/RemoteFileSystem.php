@@ -35,6 +35,7 @@ class RemoteFileSystem
 
     public function getFile($remoteFile)
     {
+        echo $this->getProtocol() . '://' . $remoteFile ."\n";
         return trim(file_get_contents($this->getProtocol() . '://' . $remoteFile));
     }
 
