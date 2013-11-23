@@ -32,7 +32,7 @@ class SelfUpdateCommandTest extends \PHPUnit_Framework_TestCase
         $rfs = $this->getMock('Shone\Scanner\Utils\RemoteFileSystem');
         $rfs->expects($this->once())
             ->method('getFile')
-            ->will($this->returnValue('1.0'));
+            ->will($this->returnValue(json_encode(array('version' => '1.0.0'))));
 
         $command = $this->getMock('Shone\Scanner\Command\SelfUpdateCommand', array('getRemoteFileSystem'));
 
@@ -44,7 +44,7 @@ class SelfUpdateCommandTest extends \PHPUnit_Framework_TestCase
         $command->setApplication(new Application());
         $commandTester = new CommandTester($command);
         $commandTester->execute(array());
-        $this->assertRegExp('/Updating to version 1.0/', $commandTester->getDisplay());
+        $this->assertRegExp('/Updating to version 1.0.0/', $commandTester->getDisplay());
     }
 
     public function testExecuteForCommandAliasWithSameVersion()
@@ -55,7 +55,7 @@ class SelfUpdateCommandTest extends \PHPUnit_Framework_TestCase
         $rfs = $this->getMock('Shone\Scanner\Utils\RemoteFileSystem');
         $rfs->expects($this->atLeastOnce())
             ->method('getFile')
-            ->will($this->returnValue('@package_version@'));
+            ->will($this->returnValue(json_encode(array('version' => '@package_version@'))));
 
         $command = $this->getMock('Shone\Scanner\Command\SelfUpdateCommand', array('getRemoteFileSystem'));
 
