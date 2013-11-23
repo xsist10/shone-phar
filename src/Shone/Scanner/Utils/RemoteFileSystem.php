@@ -35,7 +35,6 @@ class RemoteFileSystem
 
     public function getFile($remoteFile)
     {
-        echo $this->getProtocol() . '://' . $remoteFile ."\n";
         return trim(file_get_contents($this->getProtocol() . '://' . $remoteFile));
     }
 
@@ -44,11 +43,9 @@ class RemoteFileSystem
         $tempFilename = dirname($localFile) . '/' . basename($localFile, '.phar').'-temp.phar';
         $remoteUrl = $this->getProtocol() . '://' . $remoteFile;
 
-        if (!file_exists($remoteUrl)) {
+        if (!copy($remoteUrl, $tempFilename)) {
             throw new Exception('The remote file is not accessible');
         }
-
-        copy($remoteUrl, $tempFilename);
 
         if (!file_exists($tempFilename)) {
             throw new Exception('The download failed for an unexpected reason');

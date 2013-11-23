@@ -91,6 +91,7 @@ EOT;
 
             try {
                 $rfs->copyPhar('raw.github.com/xsist10/shone-phar/master/shone.phar', $tempFilename);
+                $output->writeln("<info>Successfully installed.</info>");
             } catch (Exception $e) {
                 $output->writeln('<error>' . $e->getMessage() . '</error>');
             }
