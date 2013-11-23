@@ -16,5 +16,6 @@
         "yml",
         "lock"
     ],
-    "ssl-cert-check": 1
+    "ssl-cert-check": 1,
+    "version": "1.0.0"
 }
