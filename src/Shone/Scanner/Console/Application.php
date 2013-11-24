@@ -165,6 +165,7 @@ class Application extends BaseApplication
         $commands = parent::getDefaultCommands();
         $commands[] = new Command\AboutCommand();
         $commands[] = new Command\ScanCommand();
+        $commands[] = new Command\FingerprintCommand();
 
         if ('phar:' === substr(__FILE__, 0, 5)) {
             $commands[] = new Command\SelfUpdateCommand();

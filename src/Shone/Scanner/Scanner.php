@@ -89,7 +89,6 @@ class Scanner
         }
 
         $url = self::API_ENDPOINT . $page;
-        $arguments['file_type'] = 'json';
         if ($this->key) {
             $arguments['key'] = $this->key;
         }
@@ -315,7 +314,24 @@ class Scanner
      */
     public function submitJob(array $packet)
     {
+        $packet['file_type'] = 'json';
         return $this->post('job/submit', $packet);
+    }
+
+    /**
+     * Fingerprint a file
+     *
+     * @param string $file The file to fingerprint
+     *
+     * @return array
+     */
+    public function fingerprintFile($file)
+    {
+        $packet = array(
+            'md5'  => hash_file('md5', $file),
+            'sha1' => hash_file('sha1', $file),
+        );
+        return $this->post('file/fingerprint', $packet);
     }
 
     /**
