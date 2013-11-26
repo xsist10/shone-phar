@@ -30,7 +30,8 @@ class Scanner
     const RELEASE_DATE = '@release_date@';
 
     const USER_AGENT = 'Shone PHAR Client';
-    const API_ENDPOINT = 'https://www.shone.co.za/';
+//    const API_ENDPOINT = 'https://www.shone.co.za/';
+    const API_ENDPOINT = 'http://shone.localhost/';
 
     /**
      * @var string
@@ -98,7 +99,7 @@ class Scanner
         $curl->options['returntransfer'] = true;
         $curl->options['useragent'] = self::USER_AGENT . ' - ' . self::VERSION;
         $curl->options['url'] = $url;
-        $curl->options['httpheader'] = array('Accept: application/json');
+        $curl->headers['Accept'] = 'application/json';
         $curl->options['postfields'] = $arguments;
         $curl->options['connecttimeout'] = 5;
         $curl->options['timeout'] = 10;
@@ -152,7 +153,7 @@ class Scanner
         // Attempt to decode the data
         $result = json_decode($response->body);
         if (empty($result)) {
-            throw new Exception('Response contained malformed JSON');
+            throw new Exception('Response contained empty response or malformed JSON');
         }
 
         return $result;
@@ -332,6 +333,30 @@ class Scanner
             'sha1' => hash_file('sha1', $file),
         );
         return $this->post('file/fingerprint', $packet);
+    }
+
+    /**
+     * Get job list
+     *
+     * @param array $param Parameters to filter the jobs on
+     *
+     * @return array
+     */
+    public function getJobs(array $param = array())
+    {
+        return $this->post('job/view', $param);
+    }
+
+    /**
+     * Get job
+     *
+     * @param string $hash The hash of the job to retrieve
+     *
+     * @return array
+     */
+    public function getJob($hash)
+    {
+        return $this->post('job/get', array('hash' => $hash));
     }
 
     /**

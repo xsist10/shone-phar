@@ -84,12 +84,8 @@ EOT;
         // Determine the path we're going to scan
         $file = $input->getArgument('file');
         $this->log($output, ' Setting file to `' . $file . '`');
-        if (!file_exists($file)) {
-            $this->log($output, '<error>File does not exists</error>', true);
-            return false;
-        }
-        else if (!is_readable($file)) {
-            $this->log($output, '<error>File is not readable</error>', true);
+        if (!file_exists($file) || !is_readable($file)) {
+            $this->log($output, '<error>File does not exists or is not readable</error>', true);
             return false;
         }
 
