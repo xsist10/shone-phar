@@ -158,7 +158,7 @@ EOT;
             $this->log($output);
             $jobs = $scanner->getJobs($packet);
             $count = count($jobs);
-            $this->log($output, "Found $count jobs.");
+            $this->log($output, "Found $count job(s).");
             $this->log($output);
 
             if ($count)
@@ -190,7 +190,7 @@ EOT;
                             $warning[] = 'secure';
                         }
                         $message .= str_pad(implode(', ', $warning), 22, ' ') . ' | '
-                                 . ($job->software_found+0) . ' bundle(s) found on ' . $job->server
+                                 . ($job->match_found+0) . ' bundle(s) found in ' . ($job->files+0) . ' file(s) on ' . $job->server
                                  . ($job->severity ? ' Severity: ' . $job->severity . '/10' : '');
                     }
                     else if ($job->pending)

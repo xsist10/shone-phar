@@ -15,7 +15,6 @@ use Shone\Scanner\Scanner;
 use Shone\Scanner\Command\ScanCommand;
 
 use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\Finder\Finder;
 
 class ScanCommandTest extends \PHPUnit_Framework_TestCase
 {
