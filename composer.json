@@ -13,7 +13,6 @@
         }
     ],
     "support": {
-        "irc": "security@shone.co.za",
         "issues": "https://github.com/xsist10/shone-scanner/issues"
     },
     "require": {
