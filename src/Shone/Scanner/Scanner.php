@@ -89,22 +89,26 @@ class Scanner
         }
 
         $url = self::API_ENDPOINT . $page;
-        $arguments['file_type'] = 'json';
         if ($this->key) {
             $arguments['key'] = $this->key;
         }
 
+        // Setup our user agent string
+        $user_agent = self::USER_AGENT . ' - ';
+        if (self::VERSION == '@package_version@')
+        {
+            $user_agent .= 'dev';
+        }
+        else
+        {
+            $user_agent .= self::VERSION;
+        }
+
         $curl = $this->getCurl();
-        $curl->options['verbose'] = false;
-        $curl->options['returntransfer'] = true;
-        $curl->options['useragent'] = self::USER_AGENT . ' - ' . self::VERSION;
+        $curl->options['useragent'] = $user_agent;
         $curl->options['url'] = $url;
-        $curl->options['httpheader'] = array('Accept: application/json');
+        $curl->headers['Accept'] = 'application/json';
         $curl->options['postfields'] = $arguments;
-        $curl->options['connecttimeout'] = 5;
-        $curl->options['timeout'] = 10;
-        $curl->options['followlocation'] = 1;
-        $curl->options['maxredirs'] = 3;
 
         if ($this->ssl_cert_check)
         {
@@ -153,7 +157,7 @@ class Scanner
         // Attempt to decode the data
         $result = json_decode($response->body);
         if (empty($result)) {
-            throw new Exception('Response contained malformed JSON');
+            throw new Exception('Response contained empty response or malformed JSON');
         }
 
         return $result;
@@ -315,7 +319,48 @@ class Scanner
      */
     public function submitJob(array $packet)
     {
+        $packet['file_type'] = 'json';
         return $this->post('job/submit', $packet);
+    }
+
+    /**
+     * Fingerprint a file
+     *
+     * @param string $file The file to fingerprint
+     *
+     * @return array
+     */
+    public function fingerprintFile($file)
+    {
+        $packet = array(
+            'md5'  => hash_file('md5', $file),
+            'sha1' => hash_file('sha1', $file),
+        );
+        return $this->post('file/fingerprint', $packet);
+    }
+
+    /**
+     * Get job list
+     *
+     * @param array $param Parameters to filter the jobs on
+     *
+     * @return array
+     */
+    public function getJobs(array $param = array())
+    {
+        return $this->post('job/view', $param);
+    }
+
+    /**
+     * Get job
+     *
+     * @param string $hash The hash of the job to retrieve
+     *
+     * @return array
+     */
+    public function getJob($hash)
+    {
+        return $this->post('job/get', array('hash' => $hash));
     }
 
     /**

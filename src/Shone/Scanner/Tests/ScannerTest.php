@@ -223,4 +223,31 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
         }
         $this->assertTrue((bool)$found);
     }
+
+    public function testFingerprintFile()
+    {
+        $json = '{"Status":"Success","Detail":"No match found"}';
+
+        $scanner = $this->getMock('Shone\Scanner\Scanner', array('post'));
+        $scanner->expects($this->once())
+            ->method('post')
+            ->will($this->returnValue(json_decode($json)));
+
+        $result = $scanner->fingerprintFile(__FILE__);
+        $this->assertEquals('Success', $result->Status);
+    }
+
+    public function testJobView()
+    {
+        $json = '[{"job_id":"1","hash":"abc123","label":"test","ip_address":"127.0.0.1","server":"127.0.0.1","ts_created":"1234567890","ts_completed":"1234567899","username":"bob.smith","pending":"0","processing":"0","processed":"1","failed":"0","software":"2","software_found":"Joomla!,Wordpress","match_found":"2","severity":"0","is_deprecated":"0","files":"7315","is_vulnerable":"0","status":"Completed"}]';
+
+        $scanner = $this->getMock('Shone\Scanner\Scanner', array('post'));
+        $scanner->expects($this->once())
+            ->method('post')
+            ->will($this->returnValue(json_decode($json)));
+
+        $result = $scanner->getJobs();
+        $this->assertEquals('Completed', $result[0]->status);
+        $this->assertEquals('abc123', $result[0]->hash);
+    }
 }
