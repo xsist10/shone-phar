@@ -40,7 +40,7 @@ class JobCommandTest extends \PHPUnit_Framework_TestCase
         $commandTester->execute(array('--key' => 'test'));
         $display = $commandTester->getDisplay();
         $this->assertRegExp('/2009-02-14/', $display);
-        $this->assertRegExp('/secure/', $display);
+        $this->assertRegExp('/Secure/', $display);
         $this->assertRegExp('/2 bundle\(s\) found in 7315 file\(s\) on 127\.0\.0\.1/', $display);
     }
 }
