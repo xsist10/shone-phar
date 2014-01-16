@@ -12,6 +12,13 @@ The easiest way is to just download the phar file and get started
 
     wget raw.github.com/xsist10/shone-phar/master/shone.phar && chmod +x shone.phar
 
+Alternatively you can use [composer](http://www.getcomposer.org)
+
+    {
+        "require": {
+            "shone/scanner": "1.0.*@dev"
+        }
+    }
 
 Using the scanner
 -----
