@@ -1,6 +1,9 @@
 shone-phar
 =======
 
+[![Build Status](https://travis-ci.org/xsist10/shone-phar.png?branch=master)](https://travis-ci.org/xsist10/shone-phar)
+[![Latest Stable Version](https://poser.pugx.org/xsist10/shone-phar/version.png)](https://packagist.org/packages/shone/scanner)
+
 A command-line tool for interacting with the Shone Web Scanner API.
 
 To perform scans you will need to create a free account on https://www.shone.co.za/
@@ -49,3 +52,10 @@ More information
 For more information run:
 
     ./shone.phar
+
+
+
+Contributing
+----
+
+Please see [CONTRIBUTING](https://github.com/xsist10/shone-phar/blob/master/CONTRIBUTING.md) for details.
