@@ -2,6 +2,7 @@ shone-phar
 =======
 
 [![Build Status](https://travis-ci.org/xsist10/shone-phar.png?branch=master)](https://travis-ci.org/xsist10/shone-phar)
+[![Coverage Status](https://coveralls.io/repos/xsist10/shone-phar/badge.png)](https://coveralls.io/r/xsist10/shone-phar)
 [![Latest Stable Version](https://poser.pugx.org/shone/scanner/version.png)](https://packagist.org/packages/shone/scanner)
 
 A command-line tool for interacting with the Shone Web Scanner API.
