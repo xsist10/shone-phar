@@ -102,28 +102,36 @@ EOT;
                 foreach ($job->result as $path => $results)
                 {
                     $this->log($output);
-                    $this->log($output, $path);
+                    $this->log($output, "Path: $path");
+
+                    $table = $this->getApplication()->getHelperSet()->get('table');
+                    $table->setHeaders(array('Software', 'Version', 'Status', 'Risk', 'Match'));
+
+                    $data = array();
                     foreach ($results as $match)
                     {
-                        $tag = $match->is_vulnerable ? 'error' : 'info';
                         $warning = array();
                         if ($match->is_deprecated) {
                             $warning[] = 'deprecated';
                         }
                         if ($match->is_vulnerable) {
-                            $warning[] = 'vulnerable: ' . $match->risk . '/10';
+                            $warning[] = 'vulnerable';
                         }
                         if (!$match->is_vulnerable && !$match->is_deprecated) {
                             $warning[] = 'secure';
                         }
 
-                        $message = $match->name . ' - ' . $match->version;
-                        if (!empty($warning))
-                        {
-                            $message .= ' (' . implode(', ', $warning) . ')';
-                        }
-                        $this->log($output, "<$tag>$message</$tag> - " . $match->match . " match", true);
+                        $data[] = array(
+                            $match->name,
+                            $match->version,
+                            implode(', ', $warning),
+                            ($match->risk) ? $match->risk . '/10' : 'N/A',
+                            $match->match
+                        );
                     }
+
+                    $table->setRows($data);
+                    $table->render($output);
                 }
             }
         }
@@ -163,60 +171,59 @@ EOT;
 
             if ($count)
             {
-                $this->log($output,
-                    str_pad("Date", 10, ' ') . ' | '
-                    . str_pad("Job", 32, ' ') . ' | '
-                    . str_pad("Status", 22, ' ') . ' | '
-                    . str_pad("Details", 10, ' ')
-                );
-                $this->log($output, str_pad('', 80, '-'));
+                $table = $this->getApplication()->getHelperSet()->get('table');
+                $table->setHeaders(array('Date', 'Job', 'Status', 'Severity', 'Details'));
+
+                $data = array();
 
                 foreach ($jobs as $job)
                 {
-                    $message = date('Y-m-d', $job->ts_created) . ' | '
-                             . ($job->label ? str_pad(substr($job->label, 0, 32), 32, ' ') : $job->hash) . ' | ';
+                    $entry = array(
+                        date('Y-m-d', $job->ts_created),
+                        ($job->label ? substr($job->label, 0, 32) : $job->hash)
+                    );
 
                     if ($job->processed)
                     {
-                        $tag = $job->is_vulnerable ? 'error' : 'info';
                         $warning = array();
                         if ($job->is_deprecated) {
-                            $warning[] = 'deprecated';
+                            $warning[] = 'Deprecated';
                         }
                         if ($job->is_vulnerable) {
-                            $warning[] = 'vulnerable';
+                            $warning[] = 'Vulnerable';
                         }
                         if (!$job->is_vulnerable && !$job->is_deprecated) {
-                            $warning[] = 'secure';
+                            $warning[] = 'Secure';
                         }
-                        $message .= str_pad(implode(', ', $warning), 22, ' ') . ' | '
-                                 . ($job->match_found+0) . ' bundle(s) found in ' . ($job->files+0) . ' file(s) on ' . $job->server
-                                 . ($job->severity ? ' Severity: ' . $job->severity . '/10' : '');
+
+                        $entry[] = implode(', ', $warning);
+                        $entry[] = ($job->severity ? $job->severity . '/10' : 'N/A');
+                        $entry[] = ($job->match_found+0) . ' bundle(s) found in ' . ($job->files+0) . ' file(s) on ' . $job->server;
                     }
                     else if ($job->pending)
                     {
-                        $tag = '';
-                        $message .= str_pad('pending processing', 22, ' ') . ' | please check back later';
+                        $entry[] = 'Pending processing';
+                        $entry[] = 'N/A';
+                        $entry[] = 'Please check back later';
                     }
                     else if ($job->processing)
                     {
-                        $tag = 'comment';
-                        $message .= str_pad('busy processing', 22, ' ') . ' | result should be available in a few seconds';
+                        $entry[] = 'Busy processing';
+                        $entry[] = 'N/A';
+                        $entry[] = 'Result should be available in a few seconds';
                     }
                     else if ($job->failed)
                     {
-                        $tag = 'error';
-                        $message .= str_pad('failed to process', 22, ' ') . ' | job failed to process';
+                        $entry[] = 'Failed to process';
+                        $entry[] = 'N/A';
+                        $entry[] = 'Job failed to process';
                     }
-                    if ($tag)
-                    {
-                        $this->log($output, "<$tag>$message</$tag>", true);
-                    }
-                    else
-                    {
-                        $this->log($output, "$message", true);
-                    }
+
+                    $data[] = $entry;
                 }
+
+                $table->setRows($data);
+                $table->render($output);
             }
         }
 

@@ -30,8 +30,7 @@ class Scanner
     const RELEASE_DATE = '@release_date@';
 
     const USER_AGENT = 'Shone PHAR Client';
-//    const API_ENDPOINT = 'https://www.shone.co.za/';
-    const API_ENDPOINT = 'http://shone.localhost/';
+    const API_ENDPOINT = 'https://www.shone.co.za/';
 
     /**
      * @var string
@@ -94,17 +93,22 @@ class Scanner
             $arguments['key'] = $this->key;
         }
 
+        // Setup our user agent string
+        $user_agent = self::USER_AGENT . ' - ';
+        if (self::VERSION == '@package_version@')
+        {
+            $user_agent .= 'dev';
+        }
+        else
+        {
+            $user_agent .= self::VERSION;
+        }
+
         $curl = $this->getCurl();
-        $curl->options['verbose'] = false;
-        $curl->options['returntransfer'] = true;
-        $curl->options['useragent'] = self::USER_AGENT . ' - ' . self::VERSION;
+        $curl->options['useragent'] = $user_agent;
         $curl->options['url'] = $url;
         $curl->headers['Accept'] = 'application/json';
         $curl->options['postfields'] = $arguments;
-        $curl->options['connecttimeout'] = 5;
-        $curl->options['timeout'] = 10;
-        $curl->options['followlocation'] = 1;
-        $curl->options['maxredirs'] = 3;
 
         if ($this->ssl_cert_check)
         {
