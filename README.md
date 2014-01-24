@@ -60,3 +60,6 @@ Contributing
 ----
 
 Please see [CONTRIBUTING](https://github.com/xsist10/shone-phar/blob/master/CONTRIBUTING.md) for details.
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/xsist10/shone-phar/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
