@@ -48,7 +48,6 @@ class FingerprintCommandTest extends \PHPUnit_Framework_TestCase
         $command->setApplication($application);
         $commandTester = new CommandTester($command);
         $commandTester->execute(array('file' => __FILE__));
-        $this->assertRegExp('/Failed/', $commandTester->getDisplay());
         $this->assertRegExp('/Access denied/', $commandTester->getDisplay());
     }
 
@@ -124,8 +123,8 @@ class FingerprintCommandTest extends \PHPUnit_Framework_TestCase
         $commandTester = new CommandTester($command);
         $commandTester->execute(array('file' => __FILE__));
         $this->assertRegExp('/3 matches found/', $commandTester->getDisplay());
-        $this->assertRegExp('/Zend Framework - 1.11.4 \(malicious\)/', $commandTester->getDisplay());
-        $this->assertRegExp('/Zend Framework - 1.11.5 \(vulnerable\)/', $commandTester->getDisplay());
-        $this->assertRegExp('/Zend Framework - 1.11.6 \(secure\)/', $commandTester->getDisplay());
+        $this->assertRegExp('/| Zend Framework | 1.11.4  | Malicious  |/', $commandTester->getDisplay());
+        $this->assertRegExp('/| Zend Framework | 1.11.5  | Vulnerable |/', $commandTester->getDisplay());
+        $this->assertRegExp('/| Zend Framework | 1.11.6  | Secure     |/', $commandTester->getDisplay());
     }
 }

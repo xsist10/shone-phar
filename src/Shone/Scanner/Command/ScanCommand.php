@@ -140,7 +140,6 @@ EOT;
         // Submit the job to the remote server
         $this->log($output, "<comment>Submitting job to remote server</comment>");
         $result = $scanner->submitJob($packet);
-        $this->log($output, " Result from server: ". json_encode($result));
         $this->log($output);
 
         if ($result->Status != 'Success') {

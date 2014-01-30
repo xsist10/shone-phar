@@ -99,37 +99,41 @@ EOT;
         // Submit the file to the remote server
         $this->log($output, "<comment>Submitting job to remote server</comment>");
         $result = $scanner->fingerprintFile($file);
-        $this->log($output, " Result from server: ". json_encode($result));
         $this->log($output);
 
         if ($result->Status != 'Success') {
             $this->log($output, 'Result: <error>' . $result->Detail . '</error>', true);
         } else {
             $this->log($output, 'Result: <info>' . $result->Detail . '</info>', true);
-            if (!empty($result->Matches))
-            {
-                foreach ($result->Matches as $match)
-                {
-                    $tag = $match->is_malicious || $match->is_vulnerable ? 'error' : 'info';
+
+            $table = $this->getApplication()->getHelperSet()->get('table');
+            $table->setHeaders(array('Software', 'Version', 'Status'));
+
+            $data = array();
+
+            if (!empty($result->Matches)) {
+                foreach ($result->Matches as $match) {
                     $warning = array();
                     if ($match->is_malicious) {
-                        $warning[] = 'malicious';
+                        $warning[] = 'Malicious';
                     }
                     if ($match->is_vulnerable) {
-                        $warning[] = 'vulnerable';
+                        $warning[] = 'Vulnerable';
                     }
                     if (!$match->is_vulnerable && !$match->is_malicious) {
-                        $warning[] = 'secure';
+                        $warning[] = 'Secure';
                     }
 
-                    $message = $match->software . ' - ' . $match->version;
-                    if (!empty($warning))
-                    {
-                        $message .= ' (' . implode(', ', $warning) . ')';
-                    }
-                    $this->log($output, "<$tag>$message</$tag>", true);
+                    $data[] = array(
+                        $match->software,
+                        $match->version,
+                        implode(', ', $warning)
+                    );
                 }
             }
+
+            $table->setRows($data);
+            $table->render($output);
         }
 
         $this->log($output);
