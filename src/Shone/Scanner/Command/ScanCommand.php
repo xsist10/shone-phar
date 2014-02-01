@@ -16,6 +16,9 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Command\Command;
 
+use League\Flysystem\Filesystem;
+use League\Flysystem\Adapter\Local;
+
 use Shone\Scanner\Scanner;
 use Shone\Scanner\Config;
 
@@ -30,6 +33,8 @@ use \RuntimeException;
  */
 class ScanCommand extends Command
 {
+    protected $config;
+
     /**
      * Configure our command call
      *
@@ -38,14 +43,14 @@ class ScanCommand extends Command
     protected function configure()
     {
         $help = <<<EOT
-The scan command starts and submits a scan of the local folders and uploads a fingerprint file to
+The scan command starts and submits a scan of a local folder and uploads a fingerprint file to
 the Shone Security servers.
 
 EOT;
 
         $this
             ->setName('scan')
-            ->setDescription('Scan the project for known versions')
+            ->setDescription('Scan a local project for known software vulnerabilities')
             ->setHelp($help)
             ->setDefinition(array(
                 new InputArgument('path', InputArgument::OPTIONAL, 'Specify a customer path to examine.', '.'),
@@ -56,6 +61,53 @@ EOT;
             ));
     }
 
+    protected function getFilesystem(array $config)
+    {
+        return new Local($config['path']);
+    }
+
+    protected function getConfig(InputInterface $input, Config $config)
+    {
+        $this->config['exclude_extensions'] = $config->get('ignore-ext');
+        $this->config['ssl-cert-check'] = $input->hasOption('no-cert-check') ? false : $config->get('ssl-cert-check');
+        $this->config['path'] = $input->getArgument('path');
+        $this->config['label'] = $input->hasOption('label') ? $input->getOption('label') : $config->get('label');
+        $this->config['key'] = $input->hasOption('key') ? $input->getOption('key') : $config->get('key');
+        $this->config['common-checksum'] = $input->hasOption('common-checksum') && $input->getOption('common-checksum');
+
+        return $this->config;
+    }
+
+
+    protected function log(OutputInterface $output, $message = '', $force = false)
+    {
+        if ($force || $output->getVerbosity() >= OutputInterface::VERBOSITY_NORMAL) {
+            $output->writeln($message);
+        }
+    }
+
+    protected function buildFileList(Filesystem $filesystem, $path = '')
+    {
+        $files = array();
+        foreach ($filesystem->listContents($path) as $item)
+        {
+            if ($item['type'] == 'dir')
+            {
+                if ($item['basename'] != '.git' && $item['basename'] != '.svn') {
+                    $files = array_merge($files, $this->buildFileList($filesystem, $item['path']));
+                }
+            }
+            else if ($item['type'] == 'file')
+            {
+                if (empty($item['extension']) || !in_array($item['extension'], $this->config['exclude_extensions']))
+                {
+                    $files[] = $item['path'];
+                }
+            }
+        }
+        return $files;
+    }
+
     /**
      * Execute our command call
      *
@@ -64,49 +116,36 @@ EOT;
      *
      * @return void
      */
-    protected function log(OutputInterface $output, $message = '', $force = false)
-    {
-        if ($force || $output->getVerbosity() >= OutputInterface::VERBOSITY_NORMAL) {
-            $output->writeln($message);
-        }
-    }
-
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $scanner = $this->getApplication()->getScanner();
-        $config = new Config();
+
+        $config = $this->getConfig($input, $this->getApplication()->getConfig());
 
         $this->log($output);
 
         // Setup configuration
         $this->log($output, "<comment>Configuration</comment>");
 
-        $exclude_extensions = $config->get('ignore-ext');
-        $this->log($output, ' Setting excluded extensions to `' . implode(', ', $exclude_extensions) . '`');
+        // Exclude irrelevant extensions
+        $this->log($output, ' Setting excluded extensions to `' . implode(', ', $this->config['exclude_extensions']) . '`');
 
         // Enable/disable CA certificate checks
-        $scanner->setCertCheck($input->hasOption('no-cert-check') ? false : $config->get('ssl-cert-check'));
+        $scanner->setCertCheck($config['ssl-cert-check']);
 
         // Determine the path we're going to scan
-        $path = $input->getArgument('path');
-        $this->log($output, ' Setting path to `' . $path . '`');
-        $scanner->setPath($path);
+        $this->log($output, ' Setting path to `' . $config['path'] . '`');
+        $scanner->setPath($config['path']);
 
         // Has the user specified a label?
-        $label = $input->hasOption('label') ? $input->getOption('label') : $config->get('label');
-        if ($label !== null)
-        {
-            $this->log($output, ' Setting label to `' . $label .'`');
-            $scanner->setLabel($label);
-        }
+        $this->log($output, ' Setting label to `' . $config['label'] .'`');
+        $scanner->setLabel($config['label']);
 
         // Do we have a key to use?
-        $key = $input->hasOption('key') ? $input->getOption('key') : $config->get('key');
-        $this->log($output, ' Setting key to `' . $key . '`');
-        $scanner->setKey($key);
+        $this->log($output, ' Setting key to `' . $config['key'] . '`');
+        $scanner->setKey($config['key']);
 
-        $commonChecksums = array();
-        if ($input->hasOption('common-checksum') && $input->getOption('common-checksum')) {
+        if ($config['common-checksum']) {
             if ($scanner->excludeCommonChecksums()) {
                 $this->log($output, ' Filtering out common checksums');
             } else {
@@ -115,26 +154,16 @@ EOT;
         }
         $this->log($output);
 
-        // Generate a list of files to scan
+        // Generate list of files to scan
         $this->log($output, "<comment>Generating file list:</comment>");
-        $files = $scanner->getFiles();
-        $original_count = $files->count();
-
-        if (count($exclude_extensions)) {
-            $this->log($output, " Filtering excluded extensions");
-            foreach ($exclude_extensions as $ext) {
-                $files->notName('*.' . $ext);
-            }
-            $this->log($output, " " . ($original_count - $files->count()) . " files filtered");
-        }
-
-        $this->log($output, " " . $files->count() . " files to process");
+        $filesystem = new Filesystem($this->getFilesystem($config));
+        $files = $this->buildFileList($filesystem);
+        $this->log($output, " " . count($files) . " files to process");
         $this->log($output);
 
-        // Build the job packet
+        // Build the job packet using the file list
         $this->log($output, "<comment>Building job packet</comment>");
-        $packet = $scanner->buildJobPacket($files, $label);
-        //$this->log($output, " Packet is " . number_format(strlen(json_encode($packet['job']))/1024) . "KB");
+        $packet = $scanner->buildJobPacket($filesystem, $files);
         $this->log($output);
 
         // Submit the job to the remote server

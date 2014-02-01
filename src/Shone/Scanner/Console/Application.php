@@ -21,6 +21,7 @@ use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Shone\Scanner\Command;
 use Shone\Scanner\Config;
 use Shone\Scanner\Scanner;
+use Shone\Scanner\FtpScanner;
 
 /**
  * The application to handle the console commands
@@ -165,6 +166,7 @@ class Application extends BaseApplication
         $commands = parent::getDefaultCommands();
         $commands[] = new Command\AboutCommand();
         $commands[] = new Command\ScanCommand();
+        $commands[] = new Command\FtpScanCommand();
         $commands[] = new Command\JobCommand();
         $commands[] = new Command\FingerprintCommand();
 

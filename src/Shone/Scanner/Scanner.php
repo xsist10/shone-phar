@@ -12,6 +12,8 @@ namespace Shone\Scanner;
 
 use Symfony\Component\Finder\Finder;
 
+use League\Flysystem\Filesystem;
+
 use \Curl;
 use \Exception;
 use \LogicException;
@@ -272,11 +274,11 @@ class Scanner
     /**
      * Convert found files into a job packet
      *
-     * @param Symfony\Component\Finder\Finder $finder          The reference to the found files
+     * @param Symfony\Component\Finder\Finder $finder The reference to the found files
      *
      * @return array
      */
-    public function buildJobPacket(Finder $finder)
+    public function buildJobPacket(Filesystem $filesystem, array $files)
     {
         $job = array();
         $job['job']['version'] = array(
@@ -284,19 +286,25 @@ class Scanner
         );
 
         $job['job']['control'] = array(
-          'md5'     => hash('md5', 'control'),
-          'sha1'    => hash('sha1', 'control')
+            'md5'  => hash('md5', 'control'),
+            'sha1' => hash('sha1', 'control')
         );
 
-        foreach ($finder->files() as $file) {
-            $md5 = hash_file('md5', $file);
-            $sha1 = hash_file('sha1', $file);
+        foreach ($files as $file)
+        {
+            // Sometimes the file system throws warnings or the
+            // user only has listing permissions on a file and not
+            // read permissions.
+            $stream = @$filesystem->readStream($file);
+            if (is_resource($stream))
+            {
+                $context = hash_init('md5');
+                hash_update_stream($context, $stream);
 
-            if (empty($this->common_checksums[$md5]) && empty($this->common_checksums[$sha1])) {
                 $job['job']['files']['file'][] = array(
-                    'name' => substr($file, strlen($this->path)),
-                    'md5'  => $md5,
-                    'sha1' => $sha1,
+                    'name' => $file,
+                    'sha1' => '',
+                    'md5'  => hash_final($context),
                 );
             }
         }
