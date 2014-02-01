@@ -187,13 +187,13 @@ EOT;
                     {
                         $warning = array();
                         if ($job->is_deprecated) {
-                            $warning[] = 'Deprecated';
+                            $warning[] = 'deprecated';
                         }
                         if ($job->is_vulnerable) {
-                            $warning[] = 'Vulnerable';
+                            $warning[] = 'vulnerable';
                         }
                         if (!$job->is_vulnerable && !$job->is_deprecated) {
-                            $warning[] = 'Secure';
+                            $warning[] = 'secure';
                         }
 
                         $entry[] = implode(', ', $warning);
@@ -202,19 +202,19 @@ EOT;
                     }
                     else if ($job->pending)
                     {
-                        $entry[] = 'Pending processing';
+                        $entry[] = 'pending';
                         $entry[] = 'N/A';
                         $entry[] = 'Please check back later';
                     }
                     else if ($job->processing)
                     {
-                        $entry[] = 'Busy processing';
+                        $entry[] = 'processing';
                         $entry[] = 'N/A';
                         $entry[] = 'Result should be available in a few seconds';
                     }
                     else if ($job->failed)
                     {
-                        $entry[] = 'Failed to process';
+                        $entry[] = 'failed';
                         $entry[] = 'N/A';
                         $entry[] = 'Job failed to process';
                     }
