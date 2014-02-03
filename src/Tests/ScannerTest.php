@@ -11,7 +11,9 @@
 namespace Shone\Scanner\Tests;
 
 use Shone\Scanner\Scanner;
-use Symfony\Component\Finder\Finder;
+
+use League\Flysystem\Filesystem;
+use League\Flysystem\Adapter\Local;
 
 use \Curl;
 use \CurlResponse;
@@ -199,8 +201,10 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
     public function testJobPacket()
     {
         $scanner = new Scanner();
-        $scanner->setPath(__DIR__);
-        $packet = $scanner->buildJobPacket($scanner->getFiles());
+        $filesystem = new Filesystem(new Local(__DIR__));
+
+        $files = $scanner->buildFileList($filesystem);
+        $packet = $scanner->buildJobPacket($filesystem, $files);
 
         $this->assertNotEmpty($packet);
         // Check that this file is in the list

@@ -69,11 +69,27 @@ EOT;
             ));
     }
 
+    /**
+     * Get the FTP filesystem for this command
+     *
+     * @param array $config The configuration provided.
+     *
+     * @return \League\Flysystem\Adapter\Ftp
+     * @codeCoverageIgnore
+     */
     protected function getFilesystem(array $config)
     {
         return new Ftp($config['ftp']);
     }
 
+    /**
+     * Determine configuration for the FTP scan
+     *
+     * @param \Symfony\Component\Console\Input\InputInterface $input  User inputs
+     * @param \Shone\Scanner\Config                           $config Pre-loaded configurations
+     *
+     * @return array
+     */
     protected function getConfig(InputInterface $input, Config $config)
     {
         parent::getConfig($input, $config);

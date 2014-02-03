@@ -61,11 +61,27 @@ EOT;
             ));
     }
 
+    /**
+     * Get the Local filesystem for this command
+     *
+     * @param array $config The configuration provided.
+     *
+     * @return \League\Flysystem\Adapter\Local
+     * @codeCoverageIgnore
+     */
     protected function getFilesystem(array $config)
     {
         return new Local($config['path']);
     }
 
+    /**
+     * Determine configuration for the FTP scan
+     *
+     * @param \Symfony\Component\Console\Input\InputInterface $input  User inputs
+     * @param \Shone\Scanner\Config                           $config Pre-loaded configurations
+     *
+     * @return array
+     */
     protected function getConfig(InputInterface $input, Config $config)
     {
         $this->config['exclude_extensions'] = $config->get('ignore-ext');
@@ -78,34 +94,20 @@ EOT;
         return $this->config;
     }
 
-
+    /**
+     * Log output to the console
+     *
+     * @param \Symfony\Component\Console\Input\OutputInterface $output  The output destination
+     * @param string                                           $message The content to output
+     * @param boolean                                          $force   Force output regardless of verbose level
+     *
+     * @return void
+     */
     protected function log(OutputInterface $output, $message = '', $force = false)
     {
         if ($force || $output->getVerbosity() >= OutputInterface::VERBOSITY_NORMAL) {
             $output->writeln($message);
         }
-    }
-
-    protected function buildFileList(Filesystem $filesystem, $path = '')
-    {
-        $files = array();
-        foreach ($filesystem->listContents($path) as $item)
-        {
-            if ($item['type'] == 'dir')
-            {
-                if ($item['basename'] != '.git' && $item['basename'] != '.svn') {
-                    $files = array_merge($files, $this->buildFileList($filesystem, $item['path']));
-                }
-            }
-            else if ($item['type'] == 'file')
-            {
-                if (empty($item['extension']) || !in_array($item['extension'], $this->config['exclude_extensions']))
-                {
-                    $files[] = $item['path'];
-                }
-            }
-        }
-        return $files;
     }
 
     /**
@@ -156,7 +158,7 @@ EOT;
         // Generate list of files to scan
         $this->log($output, "<comment>Generating file list:</comment>");
         $filesystem = new Filesystem($this->getFilesystem($config));
-        $files = $this->buildFileList($filesystem);
+        $files = $scanner->buildFileList($filesystem);
         $this->log($output, " " . count($files) . " files to process");
         $this->log($output);
 

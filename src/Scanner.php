@@ -231,6 +231,32 @@ class Scanner
         return false;
     }
 
+    public function buildFileList(Filesystem $filesystem, $path = '')
+    {
+        $files = array();
+        foreach ($filesystem->listContents($path) as $item)
+        {
+            if ($item['type'] == 'dir')
+            {
+                if ($item['basename'] != '.git' && $item['basename'] != '.svn') {
+                    $files = array_merge($files, $this->buildFileList($filesystem, $item['path']));
+                }
+            }
+            else if ($item['type'] == 'file')
+            {
+                if (
+                    empty($item['extension'])
+                    || empty($this->config['exclude_extensions'])
+                    || !in_array($item['extension'], $this->config['exclude_extensions'])
+                )
+                {
+                    $files[] = $item['path'];
+                }
+            }
+        }
+        return $files;
+    }
+
     /**
      * Convert found files into a job packet
      *
@@ -262,11 +288,14 @@ class Scanner
                 hash_update_stream($context, $stream);
                 $md5 = hash_final($context);
 
-                $job['job']['files']['file'][] = array(
-                    'name' => $file,
-                    'sha1' => '',
-                    'md5'  => $md5,
-                );
+                if (empty($this->common_checksums[$md5]))
+                {
+                    $job['job']['files']['file'][] = array(
+                        'name' => $file,
+                        'sha1' => '',
+                        'md5'  => $md5,
+                    );
+                }
             }
         }
 
