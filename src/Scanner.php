@@ -42,11 +42,6 @@ class Scanner
     /**
      * @var string
      */
-    private $path;
-
-    /**
-     * @var string
-     */
     private $label;
 
     /**
@@ -71,7 +66,6 @@ class Scanner
      */
     public function __construct()
     {
-        $this->path = getcwd();
         $this->common_checksums = array();
     }
 
@@ -220,40 +214,6 @@ class Scanner
     }
 
     /**
-     * Set the path to scan
-     *
-     * @param string $path The path to scan
-     *
-     * @return Shone\Scanner\Scanner
-     */
-    public function setPath($path)
-    {
-        $this->path = $path;
-        return $this;
-    }
-
-    /**
-     * Scan a folder for files we wish to transmit to the remote server
-     *
-     * @return Symfony\Component\Finder\Finder
-     */
-    public function getFiles()
-    {
-        if (!$this->path) {
-            throw new LogicException('Path required');
-        }
-
-        $finder = new Finder();
-        $finder->files()
-            ->ignoreVCS(true)
-            ->ignoreUnreadableDirs(true)
-            ->name('*')
-            ->in($this->path);
-
-        return $finder;
-    }
-
-    /**
      * Exclude common checksums that can be ignored. This helps reduce the amount of data passed to
      * the remote server
      *
@@ -300,11 +260,12 @@ class Scanner
             {
                 $context = hash_init('md5');
                 hash_update_stream($context, $stream);
+                $md5 = hash_final($context);
 
                 $job['job']['files']['file'][] = array(
                     'name' => $file,
                     'sha1' => '',
-                    'md5'  => hash_final($context),
+                    'md5'  => $md5,
                 );
             }
         }

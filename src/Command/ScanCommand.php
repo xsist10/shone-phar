@@ -70,7 +70,7 @@ EOT;
     {
         $this->config['exclude_extensions'] = $config->get('ignore-ext');
         $this->config['ssl-cert-check'] = $input->hasOption('no-cert-check') ? false : $config->get('ssl-cert-check');
-        $this->config['path'] = $input->getArgument('path');
+        $this->config['path'] = $input->hasArgument('path') ? $input->getArgument('path') : getcwd();
         $this->config['label'] = $input->hasOption('label') ? $input->getOption('label') : $config->get('label');
         $this->config['key'] = $input->hasOption('key') ? $input->getOption('key') : $config->get('key');
         $this->config['common-checksum'] = $input->hasOption('common-checksum') && $input->getOption('common-checksum');
@@ -135,7 +135,6 @@ EOT;
 
         // Determine the path we're going to scan
         $this->log($output, ' Setting path to `' . $config['path'] . '`');
-        $scanner->setPath($config['path']);
 
         // Has the user specified a label?
         $this->log($output, ' Setting label to `' . $config['label'] .'`');

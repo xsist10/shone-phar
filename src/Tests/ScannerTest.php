@@ -45,17 +45,6 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
         return $packet;
     }
 
-    /**
-     * @expectedException LogicException
-     */
-    public function testGetFiles()
-    {
-        $scanner = new Scanner();
-
-        $scanner->setPath(null);
-        $scanner->getFiles();
-    }
-
     public function testJobPostSuccess()
     {
         $response = new CurlResponse(file_get_contents(__DIR__ . '/Fixtures/SuccessJobResult.txt'));
