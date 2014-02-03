@@ -49,7 +49,7 @@ class Config
         // load defaults
         $this->config = static::$defaultConfig;
 
-        $jsonConfig = __DIR__ . '/../../../res/config.json';
+        $jsonConfig = __DIR__ . '/../res/config.json';
         if (is_file($jsonConfig) && is_readable($jsonConfig)) {
             $json = json_decode(file_get_contents($jsonConfig), true);
             $this->merge($json);

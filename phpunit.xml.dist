@@ -27,6 +27,7 @@
             <exclude>
                 <directory>src/Tests</directory>
                 <directory>src/Compiler.php</directory>
+                <directory>src/bootstrap.php</directory>
             </exclude>
         </whitelist>
     </filter>

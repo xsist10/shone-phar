@@ -68,8 +68,7 @@ class Compiler
         $this->addFile($phar, new \SplFileInfo(__DIR__ . '/Console/Application.php'), false);
 
         // Add all vendor dependencies
-        foreach (array('symfony', 'shuber') as $vendor)
-        {
+        foreach (array('symfony', 'shuber') as $vendor) {
             $finder = new Finder();
             $finder->files()
                 ->ignoreVCS(true)

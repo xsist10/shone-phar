@@ -23,7 +23,6 @@ use League\Flysystem\Adapter\Ftp;
 
 use Shone\Scanner\Config;
 
-
 /**
  * The scan command performs the security scan
  *

@@ -210,8 +210,7 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
         // Check that this file is in the list
         $packet = json_decode($packet['job']);
         $found = false;
-        foreach ($packet->job->files->file as $file)
-        {
+        foreach ($packet->job->files->file as $file) {
             $found |= strpos(__FILE__, ltrim($file->name, '/')) !== false;
         }
         $this->assertTrue((bool)$found);

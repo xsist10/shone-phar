@@ -34,6 +34,11 @@ class Scanner
     const USER_AGENT = 'Shone PHAR Client';
     const API_ENDPOINT = 'https://www.shone.co.za/';
 
+    const ERROR_CA_TEMP = 'Unable to create temporary storage for CA certificate. Try run again with --no-cert-check';
+    const ERROR_CA_LOAD = 'Failed to load CA certificate. Configure your php.ini or run again with --no-cert-check';
+    const ERROR_RESULT_EMPTY  = 'Response contained empty response or malformed JSON';
+    const ERROR_RESULT_UNKNOWN = 'Remote server returned an unexpected response';
+
     /**
      * @var string
      */
@@ -91,12 +96,9 @@ class Scanner
 
         // Setup our user agent string
         $user_agent = self::USER_AGENT . ' - ';
-        if (self::VERSION == '@package_version@')
-        {
+        if (self::VERSION == '@package_version@') {
             $user_agent .= 'dev';
-        }
-        else
-        {
+        } else {
             $user_agent .= self::VERSION;
         }
 
@@ -106,17 +108,15 @@ class Scanner
         $curl->headers['Accept'] = 'application/json';
         $curl->options['postfields'] = $arguments;
 
-        if ($this->ssl_cert_check)
-        {
+        if ($this->ssl_cert_check) {
             /*
              * Because the cURL library cannot access files in our phar file we need
              * to extract the CA certificate from the phar and tell cURL to use the
              * temporary file instead
              */
             $tmp_file = tmpfile();
-            if (!$tmp_file)
-            {
-                throw new RuntimeException('Unable to create temporary storage for CA certificate. Try run again with --no-cert-check');
+            if (!$tmp_file) {
+                throw new RuntimeException(self::ERROR_CA_TEMP);
             }
             $file_meta = stream_get_meta_data($tmp_file);
             file_put_contents($file_meta['uri'], file_get_contents(__DIR__ . "/../res/thawte.pem"));
@@ -124,9 +124,7 @@ class Scanner
             $curl->options['ssl_verifypeer'] = 1;
             $curl->options['ssl_verifyhost'] = 2;
             $curl->options['cainfo'] = $file_meta['uri'];
-        }
-        else
-        {
+        } else {
             $curl->options['ssl_verifypeer'] = 0;
             $curl->options['ssl_verifyhost'] = 0;
         }
@@ -134,26 +132,25 @@ class Scanner
         $response = $curl->post($url, $arguments);
 
         // Clear up our temporary certificate
-        if ($this->ssl_cert_check)
-        {
+        if ($this->ssl_cert_check) {
             fclose($tmp_file);
         }
 
         // Check our result for unexpected errors
         if ($response->headers['Status-Code'] === 0) {
-            throw new RuntimeException('Failed to load CA certificate. Try configuring it in php.ini or run again with --no-cert-check');
+            throw new RuntimeException(self::ERROR_CA_LOAD);
         }
         if ($response->headers['Status-Code'] != 200) {
-            throw new RuntimeException('Remote server returned an unexpected response: ' . $response->headers['Status-Code']);
+            throw new RuntimeException(self::ERROR_RESULT_UNKNOWN . ': ' . $response->headers['Status-Code']);
         }
         if (!$response->body) {
-            throw new RuntimeException('Empty response from the remote server');
+            throw new RuntimeException(self::ERROR_RESULT_EMPTY);
         }
 
         // Attempt to decode the data
         $result = json_decode($response->body);
         if (empty($result)) {
-            throw new Exception('Response contained empty response or malformed JSON');
+            throw new Exception();
         }
 
         return $result;
@@ -166,8 +163,7 @@ class Scanner
      */
     public function getCurl()
     {
-        if (!$this->curl)
-        {
+        if (!$this->curl) {
             $this->curl = new Curl();
         }
         return $this->curl;
@@ -234,22 +230,18 @@ class Scanner
     public function buildFileList(Filesystem $filesystem, $path = '')
     {
         $files = array();
-        foreach ($filesystem->listContents($path) as $item)
-        {
-            if ($item['type'] == 'dir')
-            {
+        foreach ($filesystem->listContents($path) as $item) {
+            if ($item['type'] == 'dir') {
                 if ($item['basename'] != '.git' && $item['basename'] != '.svn') {
                     $files = array_merge($files, $this->buildFileList($filesystem, $item['path']));
                 }
-            }
-            else if ($item['type'] == 'file')
-            {
-                if (
-                    empty($item['extension'])
+            } else {
+                $is_file = $item['type'] == 'file'
+                    && (empty($item['extension'])
                     || empty($this->config['exclude_extensions'])
-                    || !in_array($item['extension'], $this->config['exclude_extensions'])
-                )
-                {
+                    || !in_array($item['extension'], $this->config['exclude_extensions']);
+
+                if ($is_file) {
                     $files[] = $item['path'];
                 }
             }
@@ -276,20 +268,17 @@ class Scanner
             'sha1' => hash('sha1', 'control')
         );
 
-        foreach ($files as $file)
-        {
+        foreach ($files as $file) {
             // Sometimes the file system throws warnings or the
             // user only has listing permissions on a file and not
             // read permissions.
             $stream = @$filesystem->readStream($file);
-            if (is_resource($stream))
-            {
+            if (is_resource($stream)) {
                 $context = hash_init('md5');
                 hash_update_stream($context, $stream);
                 $md5 = hash_final($context);
 
-                if (empty($this->common_checksums[$md5]))
-                {
+                if (empty($this->common_checksums[$md5])) {
                     $job['job']['files']['file'][] = array(
                         'name' => $file,
                         'sha1' => '',

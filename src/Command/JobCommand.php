@@ -90,17 +90,14 @@ EOT;
 
         $this->log($output);
 
-        if ($input->hasOption('hash') && $input->getOption('hash'))
-        {
+        if ($input->hasOption('hash') && $input->getOption('hash')) {
             $this->log($output, "<comment>Requesting job from remote server</comment>");
             $job = $scanner->getJob($input->getOption('hash'));
 
             $software = count($job->result);
             $this->log($output, "Found $software results.");
-            if ($software)
-            {
-                foreach ($job->result as $path => $results)
-                {
+            if ($software) {
+                foreach ($job->result as $path => $results) {
                     $this->log($output);
                     $this->log($output, "Path: $path");
 
@@ -108,8 +105,7 @@ EOT;
                     $table->setHeaders(array('Software', 'Version', 'Status', 'Risk', 'Match'));
 
                     $data = array();
-                    foreach ($results as $match)
-                    {
+                    foreach ($results as $match) {
                         $warning = array();
                         if ($match->is_deprecated) {
                             $warning[] = 'deprecated';
@@ -134,19 +130,14 @@ EOT;
                     $table->render($output);
                 }
             }
-        }
-        else
-        {
+        } else {
             $packet = array();
             // Build the filter packet
-            if ($input->hasOption('label') && $input->getOption('label'))
-            {
+            if ($input->hasOption('label') && $input->getOption('label')) {
                 $packet['label'] = $input->getOption('label');
             }
-            if ($input->hasOption('status') && $input->getOption('status'))
-            {
-                switch ($input->getOption('status'))
-                {
+            if ($input->hasOption('status') && $input->getOption('status')) {
+                switch ($input->getOption('status')) {
                     case 'secure':
                         $packet['is_vulnerable'] = '-1';
                         $packet['is_deprecated'] = '-1';
@@ -169,52 +160,43 @@ EOT;
             $this->log($output, "Found $count job(s).");
             $this->log($output);
 
-            if ($count)
-            {
+            if ($count) {
                 $table = $this->getApplication()->getHelperSet()->get('table');
                 $table->setHeaders(array('Date', 'Job', 'Status', 'Severity', 'Details'));
 
                 $data = array();
 
-                foreach ($jobs as $job)
-                {
+                foreach ($jobs as $job) {
                     $entry = array(
                         date('Y-m-d', $job->ts_created),
                         ($job->label ? substr($job->label, 0, 32) : $job->hash)
                     );
 
-                    if ($job->processed)
-                    {
+                    if ($job->processed) {
                         $warning = array();
                         if ($job->is_deprecated) {
-                            $warning[] = 'Deprecated';
+                            $warning[] = 'deprecated';
                         }
                         if ($job->is_vulnerable) {
-                            $warning[] = 'Vulnerable';
+                            $warning[] = 'vulnerable';
                         }
                         if (!$job->is_vulnerable && !$job->is_deprecated) {
-                            $warning[] = 'Secure';
+                            $warning[] = 'secure';
                         }
 
                         $entry[] = implode(', ', $warning);
                         $entry[] = ($job->severity ? $job->severity . '/10' : 'N/A');
                         $entry[] = ($job->match_found+0) . ' bundle(s) found in ' . ($job->files+0) . ' file(s) on ' . $job->server;
-                    }
-                    else if ($job->pending)
-                    {
-                        $entry[] = 'Pending processing';
+                    } elseif ($job->pending) {
+                        $entry[] = 'pending';
                         $entry[] = 'N/A';
                         $entry[] = 'Please check back later';
-                    }
-                    else if ($job->processing)
-                    {
-                        $entry[] = 'Busy processing';
+                    } elseif ($job->processing) {
+                        $entry[] = 'processing';
                         $entry[] = 'N/A';
                         $entry[] = 'Result should be available in a few seconds';
-                    }
-                    else if ($job->failed)
-                    {
-                        $entry[] = 'Failed to process';
+                    } elseif ($job->failed) {
+                        $entry[] = 'failed';
                         $entry[] = 'N/A';
                         $entry[] = 'Job failed to process';
                     }
