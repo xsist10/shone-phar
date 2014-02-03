@@ -125,7 +125,7 @@ class Scanner
                 throw new RuntimeException('Unable to create temporary storage for CA certificate. Try run again with --no-cert-check');
             }
             $file_meta = stream_get_meta_data($tmp_file);
-            file_put_contents($file_meta['uri'], file_get_contents(__DIR__ . "/../../../res/thawte.pem"));
+            file_put_contents($file_meta['uri'], file_get_contents(__DIR__ . "/../res/thawte.pem"));
 
             $curl->options['ssl_verifypeer'] = 1;
             $curl->options['ssl_verifyhost'] = 2;

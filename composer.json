@@ -24,7 +24,7 @@
         "league/flysystem": "0.2.*"
     },
     "autoload": {
-        "psr-0": { "Shone": "src/" }
+        "psr-4": { "Shone\\Scanner\\": "src/" }
     },
     "bin": ["bin/shone"],
     "extra": {

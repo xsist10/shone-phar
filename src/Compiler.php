@@ -52,7 +52,7 @@ class Compiler
         $phar->startBuffering();
 
         // Add scanner files
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../bootstrap.php'));
+        $this->addFile($phar, new \SplFileInfo(__DIR__.'/bootstrap.php'));
 
         $finder = new Finder();
         $finder->files()
@@ -78,7 +78,7 @@ class Compiler
                 ->exclude('Tests')
                 ->exclude('tests')
                 ->exclude('test')
-                ->in(__DIR__.'/../../../vendor/' . $vendor . '/')
+                ->in(__DIR__.'/../vendor/' . $vendor . '/')
             ;
             foreach ($finder as $file) {
                 $this->addFile($phar, $file);
@@ -86,20 +86,20 @@ class Compiler
         }
 
         // Add autoloading files
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../../vendor/autoload.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../../vendor/composer/ClassLoader.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../../vendor/composer/autoload_namespaces.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../../vendor/composer/autoload_classmap.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../../vendor/composer/autoload_real.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../../vendor/composer/autoload_files.php'));
-        if (file_exists(__DIR__.'/../../../vendor/composer/include_paths.php')) {
-            $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../../vendor/composer/include_paths.php'));
+        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/autoload.php'));
+        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/ClassLoader.php'));
+        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/autoload_namespaces.php'));
+        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/autoload_classmap.php'));
+        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/autoload_real.php'));
+        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/autoload_files.php'));
+        if (file_exists(__DIR__.'/../vendor/composer/include_paths.php')) {
+            $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/include_paths.php'));
         }
         $this->addShoneBin($phar);
 
         // Add resources
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../../res/config.json'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../../res/thawte.pem'));
+        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../res/config.json'));
+        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../res/thawte.pem'));
 
         // Stubs
         $phar->setStub($this->getStub());
@@ -109,7 +109,7 @@ class Compiler
         // disabled for interoperability with systems without gzip ext
         // $phar->compressFiles(\Phar::GZ);
 
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../../LICENSE'), false);
+        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../LICENSE'), false);
 
         unset($phar);
     }
@@ -170,7 +170,7 @@ class Compiler
 
     private function addShoneBin($phar)
     {
-        $content = file_get_contents(__DIR__.'/../../../bin/shone');
+        $content = file_get_contents(__DIR__.'/../bin/shone');
         $content = preg_replace('{^#!/usr/bin/env php\s*}', '', $content);
         $phar->addFromString('bin/shone', $content);
     }
