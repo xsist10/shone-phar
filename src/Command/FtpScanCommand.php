@@ -56,7 +56,7 @@ EOT;
                 new InputArgument('path', InputArgument::OPTIONAL, 'Specify a customer path to examine.', '.'),
 
                 new InputOption('port', null, InputOption::VALUE_REQUIRED, 'FTP Port (default is 21).'),
-                new InputOption('username', null, InputOption::VALUE_REQUIRED, 'FTP Username.'),
+                new InputOption('username', null, InputOption::VALUE_REQUIRED, 'FTP Username (defaults to anonymous).'),
                 new InputOption('password', 'p', InputOption::VALUE_NONE, 'FTP Password.'),
                 new InputOption('passive', null, InputOption::VALUE_NONE, 'Enable passive FTP.'),
                 new InputOption('disable-ssl', 's', InputOption::VALUE_NONE, 'Disable SSL for FTP.'),
