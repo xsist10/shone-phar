@@ -14,7 +14,7 @@ Getting started
 
 The easiest way is to just download the phar file and get started
 
-    wget raw.github.com/xsist10/shone-phar/master/shone.phar && chmod +x shone.phar
+    $ wget raw.github.com/xsist10/shone-phar/master/shone.phar && chmod +x shone.phar
 
 Alternatively you can use [composer](http://www.getcomposer.org)
 
@@ -24,25 +24,79 @@ Alternatively you can use [composer](http://www.getcomposer.org)
         }
     }
 
+To install the phar globally, do the following:
+
+    $ mv shone.phar /usr/local/bin/shone
+
+
+Updating the phar
+-----
+If you are using the `shone.phar` file, you can update it to the latest version by running the following command:
+
+    $ ./shone.phar self-update
+
+
 Using the scanner
 -----
 
+**Local file system**
+
 You can scan a web directory like this
 
-    ./shone.phar scan --key "[API KEY]" --label "Website Label" /path/to/web/folder
+    $ ./shone.phar scan --key "[API KEY]" --label "Website Label" /path/to/web/folder
 
-or if you prefer to use the code directly (remember to run composer update first)
+or if you prefer to use the code directly (remember to run `composer update` first)
 
-    ./bin/shone scan --key "[API KEY]" --label "Website Label" /path/to/web/folder
+    $ ./bin/shone scan --key "[API KEY]" --label "Website Label" /path/to/web/folder
 
 If everything went ok you should be provided with a URL to find the result of your scan
+
+
+**Finger a local file**
+
+You can find out what software package a file belongs to by running the fingerprint command:
+
+    $ ./shone.phar fingerprint --key "[API KEY]" /path/to/file
+
+
+Expected result:
+
+    Result: 11 matches found
+    +----------+-----------+------------+
+    | Software | Version   | Status     |
+    +----------+-----------+------------+
+    | Joomla!  | 2.5.9     | Vulnerable |
+    | Joomla!  | 2.5.9     | Vulnerable |
+    | Joomla!  | 2.5.11    | Vulnerable |
+    | Joomla!  | 2.5.10    | Vulnerable |
+    | Joomla!  | 2.5.12    | Vulnerable |
+    | Joomla!  | 2.5.14    | Vulnerable |
+    | Joomla!  | 2.5.13    | Vulnerable |
+    | Joomla!  | 2.5.16    | Secure     |
+    | Joomla!  | 2.5.15    | Secure     |
+    | Joomla!  | 2.5.17.rc | Secure     |
+    | Joomla!  | 2.5.17    | Secure     |
+    +----------+-----------+------------+
+
+
+
+**Remote file system**
+
+You can scan a remote web directory via FTP like this:
+
+    $ ./shone.phar ftpscan --username [USERNAME] --password --key="[API KEY]" --label "Website Label" [FTP HOST] /path/to/web/folder
+
+There are a number of additional FTP options which will be listed if you run:
+
+    $ ./shone.phar ftpscan --help
+
 
 
 Compiling the phar
 -----
 You'll can recompile the phar by calling:
 
-    bin/compiler && chmod +x shone.phar
+    $ bin/compiler && chmod +x shone.phar
 
 You can then copy the phar to any server or directory you wish and use it as a stand-alone executable.
 
@@ -52,7 +106,7 @@ More information
 
 For more information run:
 
-    ./shone.phar
+    $ ./shone.phar
 
 
 
