@@ -32,7 +32,7 @@ use Shone\Scanner\Config;
  */
 class FtpScanCommand extends ScanCommand
 {
-    protected $config;
+    protected $ftp_password = '';
 
     /**
      * Configure our command call
@@ -57,7 +57,7 @@ EOT;
 
                 new InputOption('port', null, InputOption::VALUE_REQUIRED, 'FTP Port (default is 21).'),
                 new InputOption('username', null, InputOption::VALUE_REQUIRED, 'FTP Username.'),
-                new InputOption('password', null, InputOption::VALUE_REQUIRED, 'FTP Password.'),
+                new InputOption('password', 'p', InputOption::VALUE_NONE, 'FTP Password.'),
                 new InputOption('passive', null, InputOption::VALUE_NONE, 'Enable passive FTP.'),
                 new InputOption('disable-ssl', 's', InputOption::VALUE_NONE, 'Disable SSL for FTP.'),
 
@@ -95,14 +95,32 @@ EOT;
 
         $this->config['ftp'] = array(
             'host'      => $input->getArgument('host'),
-            'username'  => $input->hasOption('username') ? $input->getOption('username') : '',
-            'password'  => $input->hasOption('password') ? $input->getOption('password') : '',
-            'port'      => $input->hasOption('port') ? $input->getOption('port') : 21,
+            'username'  => $input->getOption('username') ? $input->getOption('username') : '',
+            'password'  => $this->ftp_password,
+            'port'      => $input->getOption('port') ? $input->getOption('port') : 21,
             'root'      => $this->config['path'],
-            'passive'   => $input->hasOption('passive'),
-            'ssl'       => !$input->hasOption('disable-ssl'),
+            'passive'   => $input->getOption('passive'),
+            'ssl'       => !$input->getOption('disable-ssl'),
         );
 
         return $this->config;
+    }
+
+    /**
+     * Execute our command call
+     *
+     * @param Symfony\Component\Console\Input\InputInterface   $input  Input source
+     * @param Symfony\Component\Console\Output\OutputInterface $output Output source
+     *
+     * @return void
+     * @codeCoverageIgnore
+     */
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        if ($input->getOption('password')) {
+            $dialog = $this->getHelperSet()->get('dialog');
+            $this->ftp_password = $dialog->askHiddenResponse($output, 'FTP password:');
+        }
+        return parent::execute($input, $output);
     }
 }

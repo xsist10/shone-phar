@@ -17,6 +17,7 @@ use League\Flysystem\Adapter\Local;
 
 use \Curl;
 use \CurlResponse;
+use \ReflectionProperty;
 
 class ScannerTest extends \PHPUnit_Framework_TestCase
 {
@@ -203,7 +204,13 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
         $scanner = new Scanner();
         $filesystem = new Filesystem(new Local(__DIR__));
 
-        $files = $scanner->buildFileList($filesystem);
+        $property = new ReflectionProperty('Shone\Scanner\Scanner', 'common_checksums');
+        $property->setAccessible(true);
+        $property->setValue($scanner, array('742b794187af3520e8a991e207660493' => true));
+
+        $files = $scanner->buildFileList($filesystem, '', array('txt'));
+        $files[] = "non_existant_file";
+
         $packet = $scanner->buildJobPacket($filesystem, $files);
 
         $this->assertNotEmpty($packet);
@@ -214,6 +221,50 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
             $found |= strpos(__FILE__, ltrim($file->name, '/')) !== false;
         }
         $this->assertTrue((bool)$found);
+    }
+
+    public function testJobPacketLargeFile()
+    {
+        $scanner = new Scanner();
+
+        $filesystem = $this->getMockBuilder('League\Flysystem\Filesystem', array('getSize'))
+                     ->disableOriginalConstructor()
+                     ->getMock();
+        // Make sure the files returned are too large to scan
+        $filesystem->expects($this->once())
+            ->method('getSize')
+            ->will($this->returnValue(4*1024*1024));
+
+        // Only use this one file
+        $files = array(__FILE__);
+        $packet = $scanner->buildJobPacket($filesystem, $files);
+
+        // Check that we don't have any files listed
+        $this->assertNotEmpty($packet);
+        $packet = json_decode($packet['job']);
+        $this->assertTrue(empty($packet->job->files));
+    }
+
+    public function testJobPacketInvalidFile()
+    {
+        $scanner = new Scanner();
+
+        $filesystem = $this->getMockBuilder('League\Flysystem\Filesystem', array('getSize'))
+                     ->disableOriginalConstructor()
+                     ->getMock();
+        // Mock this out so it passes this step
+        $filesystem->expects($this->once())
+            ->method('getSize')
+            ->will($this->returnValue(10));
+
+        // Only use this one file
+        $files = array(__FILE__);
+        $packet = $scanner->buildJobPacket($filesystem, $files);
+
+        // Check that we don't have any files listed
+        $this->assertNotEmpty($packet);
+        $packet = json_decode($packet['job']);
+        $this->assertTrue(empty($packet->job->files));
     }
 
     public function testFingerprintFile()
@@ -229,7 +280,7 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Success', $result->Status);
     }
 
-    public function testJobView()
+    public function testJobsView()
     {
         $json = '[{"job_id":"1","hash":"abc123","label":"test","ip_address":"127.0.0.1","server":"127.0.0.1","ts_created":"1234567890","ts_completed":"1234567899","username":"bob.smith","pending":"0","processing":"0","processed":"1","failed":"0","software":"2","software_found":"Joomla!,Wordpress","match_found":"2","severity":"0","is_deprecated":"0","files":"7315","is_vulnerable":"0","status":"Completed"}]';
 
@@ -241,5 +292,24 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
         $result = $scanner->getJobs();
         $this->assertEquals('Completed', $result[0]->status);
         $this->assertEquals('abc123', $result[0]->hash);
+    }
+
+    public function testJobView()
+    {
+        $json = '{"result":{"\/":{"6470":{"download_id":"6470","path":"\/","name":"Joomla!","version_id":"4475","version":"2.5.10","match":"96.00%","is_vulnerable":"1","software_id":"4","is_deprecated":"0","favicon":"http:\/\/www.joomla.org\/favicon.ico","risk":"10"},"6570":{"download_id":"6570","path":"\/","name":"Joomla!","version_id":"4631","version":"2.5.13","match":"94.00%","is_vulnerable":"1","software_id":"4","is_deprecated":"1","favicon":"http:\/\/www.joomla.org\/favicon.ico","risk":"10"}},"\/media\/editors\/tinymce\/jscripts\/tiny_mce":{"4798":{"download_id":"4798","path":"\/media\/editors\/tinymce\/jscripts\/tiny_mce","name":"tinymce","version_id":"3511","version":"3.5.2","match":"10.00%","is_vulnerable":"0","software_id":"17","is_deprecated":"0","favicon":"http:\/\/tinymce.moxiecode.com\/favicon.ico","risk":0}}}}';
+
+        $scanner = $this->getMock('Shone\Scanner\Scanner', array('post'));
+        $scanner->expects($this->once())
+            ->method('post')
+            ->will($this->returnValue(json_decode($json)));
+
+        $response = $scanner->getJob('a');
+        $result = (array)$response->result;
+        $result = (array)$result['/'];
+        $result = array_shift($result);
+        $this->assertEquals('/', $result->path);
+        $this->assertEquals('Joomla!', $result->name);
+        $this->assertEquals('2.5.10', $result->version);
+        $this->assertEquals('96.00%', $result->match);
     }
 }

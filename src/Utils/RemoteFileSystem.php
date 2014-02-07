@@ -18,6 +18,7 @@ use \Exception;
  * The Compiler class compiles shone into a phar
  *
  * @author Thomas Shone <thomas@shone.co.za>
+ * @codeCoverageIgnore
  */
 class RemoteFileSystem
 {

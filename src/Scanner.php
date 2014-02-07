@@ -34,6 +34,8 @@ class Scanner
     const USER_AGENT = 'Shone PHAR Client';
     const API_ENDPOINT = 'https://www.shone.co.za/';
 
+    const MAX_FILE_SIZE = 2097152; // 2MB
+
     const ERROR_CA_TEMP = 'Unable to create temporary storage for CA certificate. Try run again with --no-cert-check';
     const ERROR_CA_LOAD = 'Failed to load CA certificate. Configure your php.ini or run again with --no-cert-check';
     const ERROR_RESULT_EMPTY  = 'Response contained empty response or malformed JSON';
@@ -55,6 +57,11 @@ class Scanner
     private $common_checksums;
 
     /**
+     * @var array
+     */
+    private $ignore_ext;
+
+    /**
      * @var bool
      */
     private $ssl_cert_check;
@@ -72,6 +79,51 @@ class Scanner
     public function __construct()
     {
         $this->common_checksums = array();
+        $this->ignore_ext = array();
+    }
+
+    /**
+     * Get the user-agent to pass for the scanner
+     *
+     * @return string
+     * @codeCoverageIgnore
+     */
+    protected function getUserAgent()
+    {
+        if (self::VERSION == '@package_version@') {
+            return self::USER_AGENT . ' - dev';
+        } else {
+            return self::USER_AGENT . ' - ' . self::VERSION;
+        }
+    }
+
+    /**
+     * Returns the location of the CA file
+     *
+     * @return string
+     * @codeCoverageIgnore
+     */
+    protected function getCAFile()
+    {
+        if (strpos(__FILE__, 'phar:///') === 0)
+        {
+            /*
+             * Because the cURL library cannot access files in our phar file we need
+             * to extract the CA certificate from the phar and tell cURL to use the
+             * temporary file instead
+             */
+            $this->cafile = tmpfile();
+            if (!$this->cafile) {
+                throw new RuntimeException(self::ERROR_CA_TEMP);
+            }
+            $file_meta = stream_get_meta_data($this->cafile);
+            file_put_contents($file_meta['uri'], file_get_contents(__DIR__ . "/../res/thawte.pem"));
+            return $file_meta['uri'];
+        }
+        else
+        {
+            return realpath(__DIR__ . "/../res/thawte.pem");
+        }
     }
 
     /**
@@ -85,56 +137,27 @@ class Scanner
      */
     protected function post($page, array $arguments = array())
     {
-        if (!function_exists('curl_init')) {
-            throw new RuntimeException('Please install cURL and enable it for PHP.');
-        }
-
         $url = self::API_ENDPOINT . $page;
         if ($this->key) {
             $arguments['key'] = $this->key;
         }
 
-        // Setup our user agent string
-        $user_agent = self::USER_AGENT . ' - ';
-        if (self::VERSION == '@package_version@') {
-            $user_agent .= 'dev';
-        } else {
-            $user_agent .= self::VERSION;
-        }
-
         $curl = $this->getCurl();
-        $curl->options['useragent'] = $user_agent;
+        $curl->options['useragent'] = $this->getUserAgent();
         $curl->options['url'] = $url;
         $curl->headers['Accept'] = 'application/json';
         $curl->options['postfields'] = $arguments;
 
         if ($this->ssl_cert_check) {
-            /*
-             * Because the cURL library cannot access files in our phar file we need
-             * to extract the CA certificate from the phar and tell cURL to use the
-             * temporary file instead
-             */
-            $tmp_file = tmpfile();
-            if (!$tmp_file) {
-                throw new RuntimeException(self::ERROR_CA_TEMP);
-            }
-            $file_meta = stream_get_meta_data($tmp_file);
-            file_put_contents($file_meta['uri'], file_get_contents(__DIR__ . "/../res/thawte.pem"));
-
             $curl->options['ssl_verifypeer'] = 1;
             $curl->options['ssl_verifyhost'] = 2;
-            $curl->options['cainfo'] = $file_meta['uri'];
+            $curl->options['cainfo'] = $this->getCAFile();
         } else {
             $curl->options['ssl_verifypeer'] = 0;
             $curl->options['ssl_verifyhost'] = 0;
         }
 
         $response = $curl->post($url, $arguments);
-
-        // Clear up our temporary certificate
-        if ($this->ssl_cert_check) {
-            fclose($tmp_file);
-        }
 
         // Check our result for unexpected errors
         if ($response->headers['Status-Code'] === 0) {
@@ -148,12 +171,7 @@ class Scanner
         }
 
         // Attempt to decode the data
-        $result = json_decode($response->body);
-        if (empty($result)) {
-            throw new Exception();
-        }
-
-        return $result;
+        return json_decode($response->body);
     }
 
     /**
@@ -227,6 +245,28 @@ class Scanner
         return false;
     }
 
+    /**
+     * Set the list of file extensions to ignore in the scan
+     *
+     * @param array $ignore_ext The extensions to ignore (not preceeding '.')
+     *
+     * @return Shone\Scanner\Scanner
+     */
+    public function setIgnoreExtensions(array $ignore_ext)
+    {
+        $this->ignore_ext = $ignore_ext;
+
+        return $this;
+    }
+
+    /**
+     * Build a list of files to process from the filesystem provided
+     *
+     * @param League\Flysystem\Filesystem $filesystem The filesystem to use
+     * @param string                                  The path inside the filesystem to list
+     *
+     * @return array
+     */
     public function buildFileList(Filesystem $filesystem, $path = '')
     {
         $files = array();
@@ -235,13 +275,8 @@ class Scanner
                 if ($item['basename'] != '.git' && $item['basename'] != '.svn') {
                     $files = array_merge($files, $this->buildFileList($filesystem, $item['path']));
                 }
-            } else {
-                $is_file = $item['type'] == 'file'
-                    && (empty($item['extension'])
-                    || empty($this->config['exclude_extensions'])
-                    || !in_array($item['extension'], $this->config['exclude_extensions']);
-
-                if ($is_file) {
+            } elseif ($item['type'] == 'file') {
+                if (empty($item['extension']) || !in_array($item['extension'], $this->ignore_ext)) {
                     $files[] = $item['path'];
                 }
             }
@@ -250,9 +285,59 @@ class Scanner
     }
 
     /**
+     * Steam file content into a hashing mechanism
+     *
+     * @param Symfony\Component\Finder\Finder $finder The reference to the found files
+     * @param string                          $file   File to fingerprint
+     *
+     * @return array
+     */
+    protected function buildFileFingerprint(Filesystem $filesystem, $file)
+    {
+        try
+        {
+            // If the file is over a certain size, ignore it. This
+            // prevents large downloads from remote Filesystems.
+            if ((int)@$filesystem->getSize($file) > self::MAX_FILE_SIZE) {
+                return null;
+            }
+
+            // Sometimes the file system throws warnings or the
+            // user only has listing permissions on a file and not
+            // read permissions.
+            $stream = @$filesystem->readStream($file);
+            if (!is_resource($stream)) {
+                return null;
+            }
+
+            $context = hash_init('md5');
+            hash_update_stream($context, $stream);
+            $md5 = hash_final($context);
+
+            if (!empty($this->common_checksums[$md5])) {
+                return null;
+            }
+
+            return array(
+                'name' => $file,
+                'sha1' => '',
+                'md5'  => $md5,
+            );
+        }
+        catch (RuntimeException $exception)
+        {
+            // We had a problem examining the file. It might be because
+            // the file no longer exists or we don't have permission to read it
+            // TODO: Report on number of issues
+            return null;
+        }
+    }
+
+    /**
      * Convert found files into a job packet
      *
      * @param Symfony\Component\Finder\Finder $finder The reference to the found files
+     * @param array                           $files  List of files to fingerprint
      *
      * @return array
      */
@@ -269,22 +354,10 @@ class Scanner
         );
 
         foreach ($files as $file) {
-            // Sometimes the file system throws warnings or the
-            // user only has listing permissions on a file and not
-            // read permissions.
-            $stream = @$filesystem->readStream($file);
-            if (is_resource($stream)) {
-                $context = hash_init('md5');
-                hash_update_stream($context, $stream);
-                $md5 = hash_final($context);
-
-                if (empty($this->common_checksums[$md5])) {
-                    $job['job']['files']['file'][] = array(
-                        'name' => $file,
-                        'sha1' => '',
-                        'md5'  => $md5,
-                    );
-                }
+            $fingerprint = $this->buildFileFingerprint($filesystem, $file);
+            if (!empty($fingerprint))
+            {
+                $job['job']['files']['file'][] = $fingerprint;
             }
         }
 

@@ -1,21 +1,28 @@
 {
     "ignore-ext": [
-        "jpg",
-        "jpeg",
-        "png",
-        "gif",
+        "avi",
         "bmp",
-        "ico",
         "doc",
         "docx",
-        "pdf",
-        "txt",
-        "md",
-        "log",
+        "gif",
+        "ico",
+        "jpeg",
+        "jpg",
         "json",
+        "lock",
+        "log",
+        "md",
+        "mkv",
+        "mp3",
+        "mpeg",
+        "mpg",
+        "pdf",
+        "png",
+        "tar",
+        "txt",
         "yml",
-        "lock"
+        "zip"
     ],
     "ssl-cert-check": 1,
-    "version": "1.0.4"
+    "version": "1.0.5"
 }

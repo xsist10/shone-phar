@@ -66,6 +66,7 @@ EOT;
      * @param Symfony\Component\Console\Output\OutputInterface $output Output source
      *
      * @return void
+     * @codeCoverageIgnore
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {

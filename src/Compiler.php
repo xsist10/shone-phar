@@ -60,7 +60,8 @@ class Compiler
             ->name('*.php')
             ->notName('Compiler.php')
             ->notName('Application.php')
-            ->in(__DIR__.'/..')
+            ->notName('bootstrap.php')
+            ->in(__DIR__)
         ;
         foreach ($finder as $file) {
             $this->addFile($phar, $file);
@@ -68,7 +69,7 @@ class Compiler
         $this->addFile($phar, new \SplFileInfo(__DIR__ . '/Console/Application.php'), false);
 
         // Add all vendor dependencies
-        foreach (array('symfony', 'shuber') as $vendor) {
+        foreach (array('symfony', 'shuber', 'league') as $vendor) {
             $finder = new Finder();
             $finder->files()
                 ->ignoreVCS(true)
@@ -91,6 +92,9 @@ class Compiler
         $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/autoload_classmap.php'));
         $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/autoload_real.php'));
         $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/autoload_files.php'));
+        if (file_exists(__DIR__.'/../vendor/composer/autoload_psr4.php')) {
+            $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/autoload_psr4.php'));
+        }
         if (file_exists(__DIR__.'/../vendor/composer/include_paths.php')) {
             $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/include_paths.php'));
         }

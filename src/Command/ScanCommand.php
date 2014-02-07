@@ -84,12 +84,12 @@ EOT;
      */
     protected function getConfig(InputInterface $input, Config $config)
     {
-        $this->config['exclude_extensions'] = $config->get('ignore-ext');
-        $this->config['ssl-cert-check'] = $input->hasOption('no-cert-check') ? false : $config->get('ssl-cert-check');
+        $this->config['ignore-ext'] = $config->get('ignore-ext');
+        $this->config['ssl-cert-check'] = $input->getOption('no-cert-check') ? false : $config->get('ssl-cert-check');
         $this->config['path'] = $input->hasArgument('path') ? $input->getArgument('path') : getcwd();
-        $this->config['label'] = $input->hasOption('label') ? $input->getOption('label') : $config->get('label');
-        $this->config['key'] = $input->hasOption('key') ? $input->getOption('key') : $config->get('key');
-        $this->config['common-checksum'] = $input->hasOption('common-checksum') && $input->getOption('common-checksum');
+        $this->config['label'] = $input->getOption('label') ? $input->getOption('label') : $config->get('label');
+        $this->config['key'] = $input->getOption('key') ? $input->getOption('key') : $config->get('key');
+        $this->config['common-checksum'] = $input->getOption('common-checksum') && $input->getOption('common-checksum');
 
         return $this->config;
     }
@@ -130,7 +130,8 @@ EOT;
         $this->log($output, "<comment>Configuration</comment>");
 
         // Exclude irrelevant extensions
-        $this->log($output, ' Setting excluded extensions to `' . implode(', ', $this->config['exclude_extensions']) . '`');
+        $this->log($output, ' Setting excluded extensions contains ' . count($this->config['ignore-ext']) . ' entries');
+        $scanner->setIgnoreExtensions($this->config['ignore-ext']);
 
         // Enable/disable CA certificate checks
         $scanner->setCertCheck($config['ssl-cert-check']);

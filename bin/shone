@@ -5,6 +5,10 @@ if (PHP_SAPI !== 'cli') {
     echo 'Warning: Shone Scanner should be invoked via the CLI version of PHP, not the ' . PHP_SAPI . ' SAPI' . PHP_EOL;
 }
 
+if (!function_exists('curl_init')) {
+    die('Please install cURL and enable it for PHP.');
+}
+
 require __DIR__ . '/../src/bootstrap.php';
 
 use Shone\Scanner\Console\Application;
