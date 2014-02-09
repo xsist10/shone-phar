@@ -105,8 +105,7 @@ class Scanner
      */
     protected function getCAFile()
     {
-        if (strpos(__FILE__, 'phar:///') === 0)
-        {
+        if ('phar:' === substr(__FILE__, 0, 5)) {
             /*
              * Because the cURL library cannot access files in our phar file we need
              * to extract the CA certificate from the phar and tell cURL to use the

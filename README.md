@@ -8,10 +8,10 @@ shone-phar
 
 A command-line tool for interacting with the Shone Web Scanner API.
 
-To perform scans you will need to create a free account on https://www.shone.co.za/
-
 Getting started
 -----
+
+**To perform scans you will need to create a free account on https://www.shone.co.za/**
 
 The easiest way is to just download the phar file and get started
 
