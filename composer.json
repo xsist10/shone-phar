@@ -23,6 +23,9 @@
         "shuber/curl": "dev-master",
         "league/flysystem": "0.2.*"
     },
+    "require-dev": {
+        "satooshi/php-coveralls": "dev-master"
+    },
     "autoload": {
         "psr-4": { "Shone\\Scanner\\": "src/" }
     },
