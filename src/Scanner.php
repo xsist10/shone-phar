@@ -98,47 +98,6 @@ class Scanner
     }
 
     /**
-     * Returns the location of the CA file
-     *
-     * @return string
-     * @codeCoverageIgnore
-     */
-    protected function extractCAFile()
-    {
-        if ('phar:' === substr(__FILE__, 0, 5)) {
-            /*
-             * Because the cURL library cannot access files in our phar file we need
-             * to extract the CA certificate from the phar and tell cURL to use the
-             * temporary file instead
-             */
-            $this->cafile = tmpfile();
-            if (!$this->cafile) {
-                throw new RuntimeException(self::ERROR_CA_TEMP);
-            }
-            $file_meta = stream_get_meta_data($this->cafile);
-            file_put_contents($file_meta['uri'], file_get_contents(__DIR__ . "/../" . self::CA_FILE));
-            return $file_meta['uri'];
-        }
-        else
-        {
-            return realpath(__DIR__ . "/../" . self::CA_FILE);
-        }
-    }
-
-    /**
-     * Cleanup the extracted CA file
-     *
-     * @return null
-     * @codeCoverageIgnore
-     */
-    protected function cleanupCAFile()
-    {
-        if ('phar:' === substr(__FILE__, 0, 5)) {
-            fclose($this->cafile);
-        }
-    }
-
-    /**
      * Call the remote API with a POST request
      *
      * @param string $page
@@ -160,12 +119,10 @@ class Scanner
 
         $client = $this->getHttpClient();
         $client->setBaseUrl(self::API_ENDPOINT);
-
-        if ($this->ssl_cert_check) {
-            $this->extractCAFile();
-        }
-        $client->setSslVerification($this->ssl_cert_check ? true : false);
         $client->setUserAgent($this->getUserAgent());
+        if (!$this->ssl_cert_check) {
+            $client->setSslVerification(false);
+        }
 
         $request = $client->post(
             $page,
@@ -175,10 +132,6 @@ class Scanner
 
         // You must send a request in order for the transfer to occur
         $response = $request->send();
-
-        if ($this->ssl_cert_check) {
-            $this->cleanupCAFile();
-        }
 
         // Check our result for unexpected errors
         $status_code = $response->getStatusCode();
@@ -196,27 +149,6 @@ class Scanner
         }
 
         return $json;
-
-
-/*
-        $curl->headers['Accept'] = 'application/json';
-
-
-        $response = $curl->post($url, $arguments);
-
-        // Check our result for unexpected errors
-        if ($response->headers['Status-Code'] === 0) {
-            throw new RuntimeException(self::ERROR_CA_LOAD);
-        }
-        if ($response->headers['Status-Code'] != 200) {
-            throw new RuntimeException(self::ERROR_RESULT_UNKNOWN . ': ' . $response->headers['Status-Code']);
-        }
-        if (!$response->body) {
-            throw new RuntimeException(self::ERROR_RESULT_EMPTY);
-        }
-
-        // Attempt to decode the data
-        return json_decode($response->body);*/
     }
 
     /**

@@ -97,7 +97,7 @@ Compiling the phar
 -----
 You'll can recompile the phar by calling:
 
-    $ bin/compiler && chmod +x shone.phar
+    $ ./bin/compile && chmod +x shone.phar
 
 You can then copy the phar to any server or directory you wish and use it as a stand-alone executable.
 

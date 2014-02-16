@@ -69,12 +69,14 @@ class Compiler
         $this->addFile($phar, new \SplFileInfo(__DIR__ . '/Console/Application.php'), false);
 
         // Add all vendor dependencies
-        foreach (array('symfony', 'shuber', 'league') as $vendor) {
+        foreach (array('symfony', 'guzzle', 'league') as $vendor) {
             $finder = new Finder();
             $finder->files()
                 ->ignoreVCS(true)
                 ->name('*.php')
                 ->name('*.json')
+                ->name('*.pem')
+                ->name('*.pem.md5')
                 ->exclude('Tests')
                 ->exclude('tests')
                 ->exclude('test')
@@ -102,7 +104,6 @@ class Compiler
 
         // Add resources
         $this->addFile($phar, new \SplFileInfo(__DIR__.'/../res/config.json'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../res/thawte.pem'));
 
         // Stubs
         $phar->setStub($this->getStub());
