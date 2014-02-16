@@ -11,10 +11,9 @@
 namespace Shone\Scanner;
 
 use Symfony\Component\Finder\Finder;
-
 use League\Flysystem\Filesystem;
+use Guzzle\Http\Client;
 
-use \Curl;
 use \Exception;
 use \LogicException;
 use \RuntimeException;
@@ -33,6 +32,7 @@ class Scanner
 
     const USER_AGENT = 'Shone PHAR Client';
     const API_ENDPOINT = 'https://www.shone.co.za/';
+    const CA_FILE = 'vendor/guzzle/guzzle/src/Guzzle/Http/Resources/cacert.pem';
 
     const MAX_FILE_SIZE = 2097152; // 2MB
 
@@ -67,9 +67,9 @@ class Scanner
     private $ssl_cert_check;
 
     /**
-     * @var \Curl
+     * @var Guzzle\Http\Client
      */
-    private $curl;
+    private $http_client;
 
     /**
      * Setup our new scanner
@@ -103,7 +103,7 @@ class Scanner
      * @return string
      * @codeCoverageIgnore
      */
-    protected function getCAFile()
+    protected function extractCAFile()
     {
         if ('phar:' === substr(__FILE__, 0, 5)) {
             /*
@@ -116,12 +116,25 @@ class Scanner
                 throw new RuntimeException(self::ERROR_CA_TEMP);
             }
             $file_meta = stream_get_meta_data($this->cafile);
-            file_put_contents($file_meta['uri'], file_get_contents(__DIR__ . "/../res/thawte.pem"));
+            file_put_contents($file_meta['uri'], file_get_contents(__DIR__ . "/../" . self::CA_FILE));
             return $file_meta['uri'];
         }
         else
         {
-            return realpath(__DIR__ . "/../res/thawte.pem");
+            return realpath(__DIR__ . "/../" . self::CA_FILE);
+        }
+    }
+
+    /**
+     * Cleanup the extracted CA file
+     *
+     * @return null
+     * @codeCoverageIgnore
+     */
+    protected function cleanupCAFile()
+    {
+        if ('phar:' === substr(__FILE__, 0, 5)) {
+            fclose($this->cafile);
         }
     }
 
@@ -136,25 +149,58 @@ class Scanner
      */
     protected function post($page, array $arguments = array())
     {
-        $url = self::API_ENDPOINT . $page;
         if ($this->key) {
             $arguments['key'] = $this->key;
         }
+        $arguments['encode'] = 'json';
 
-        $curl = $this->getCurl();
-        $curl->options['useragent'] = $this->getUserAgent();
-        $curl->options['url'] = $url;
-        $curl->headers['Accept'] = 'application/json';
-        $curl->options['postfields'] = $arguments;
+        $headers = array(
+            'Accept-Encoding' => 'application/json'
+        );
+
+        $client = $this->getHttpClient();
+        $client->setBaseUrl(self::API_ENDPOINT);
 
         if ($this->ssl_cert_check) {
-            $curl->options['ssl_verifypeer'] = 1;
-            $curl->options['ssl_verifyhost'] = 2;
-            $curl->options['cainfo'] = $this->getCAFile();
-        } else {
-            $curl->options['ssl_verifypeer'] = 0;
-            $curl->options['ssl_verifyhost'] = 0;
+            $this->extractCAFile();
         }
+        $client->setSslVerification($this->ssl_cert_check ? true : false);
+        $client->setUserAgent($this->getUserAgent());
+
+        $request = $client->post(
+            $page,
+            $headers,
+            $arguments
+        );
+
+        // You must send a request in order for the transfer to occur
+        $response = $request->send();
+
+        if ($this->ssl_cert_check) {
+            $this->cleanupCAFile();
+        }
+
+        // Check our result for unexpected errors
+        $status_code = $response->getStatusCode();
+        if ($status_code == 0) {
+            throw new RuntimeException(self::ERROR_CA_LOAD);
+        }
+        if ($status_code != 200) {
+            throw new RuntimeException(self::ERROR_RESULT_UNKNOWN . ': ' . $status_code);
+        }
+
+        // Attempt to grab json data
+        $json = $response->json();
+        if (!$json) {
+            throw new RuntimeException(self::ERROR_RESULT_EMPTY);
+        }
+
+        return $json;
+
+
+/*
+        $curl->headers['Accept'] = 'application/json';
+
 
         $response = $curl->post($url, $arguments);
 
@@ -170,20 +216,20 @@ class Scanner
         }
 
         // Attempt to decode the data
-        return json_decode($response->body);
+        return json_decode($response->body);*/
     }
 
     /**
      * Return the curl class to use for making calls
      *
-     * @return \Curl
+     * @return Guzzle\Http\Client
      */
-    public function getCurl()
+    public function getHttpClient()
     {
-        if (!$this->curl) {
-            $this->curl = new Curl();
+        if (!$this->http_client) {
+            $this->http_client = new Client();
         }
-        return $this->curl;
+        return $this->http_client;
     }
 
     /**
@@ -236,8 +282,8 @@ class Scanner
     {
         $result = $this->post('job/common_checksums');
 
-        if ($result->Status == 'Success') {
-            $this->common_checksums = (array)$result->Hashes;
+        if ($result['Status'] == 'Success') {
+            $this->common_checksums = (array)$result['Hashes'];
             return true;
         }
 
@@ -304,7 +350,7 @@ class Scanner
             // Sometimes the file system throws warnings or the
             // user only has listing permissions on a file and not
             // read permissions.
-            $stream = @$filesystem->readStream($file);
+            $stream = $filesystem->readStream($file);
             if (!is_resource($stream)) {
                 return null;
             }
@@ -312,6 +358,8 @@ class Scanner
             $context = hash_init('md5');
             hash_update_stream($context, $stream);
             $md5 = hash_final($context);
+            // Close the resource to release the handle
+            fclose($stream);
 
             if (!empty($this->common_checksums[$md5])) {
                 return null;

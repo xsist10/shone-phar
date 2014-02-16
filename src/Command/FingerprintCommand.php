@@ -101,32 +101,32 @@ EOT;
         $result = $scanner->fingerprintFile($file);
         $this->log($output);
 
-        if ($result->Status != 'Success') {
-            $this->log($output, 'Result: <error>' . $result->Detail . '</error>', true);
+        if ($result['Status'] != 'Success') {
+            $this->log($output, 'Result: <error>' . $result['Detail'] . '</error>', true);
         } else {
-            $this->log($output, 'Result: <info>' . $result->Detail . '</info>', true);
+            $this->log($output, 'Result: <info>' . $result['Detail'] . '</info>', true);
 
             $table = $this->getApplication()->getHelperSet()->get('table');
             $table->setHeaders(array('Software', 'Version', 'Status'));
 
             $data = array();
 
-            if (!empty($result->Matches)) {
-                foreach ($result->Matches as $match) {
+            if (!empty($result['Matches'])) {
+                foreach ($result['Matches'] as $match) {
                     $warning = array();
-                    if ($match->is_malicious) {
+                    if ($match['is_malicious']) {
                         $warning[] = 'Malicious';
                     }
-                    if ($match->is_vulnerable) {
+                    if ($match['is_vulnerable']) {
                         $warning[] = 'Vulnerable';
                     }
-                    if (!$match->is_vulnerable && !$match->is_malicious) {
+                    if (!$match['is_vulnerable'] && !$match['is_malicious']) {
                         $warning[] = 'Secure';
                     }
 
                     $data[] = array(
-                        $match->software,
-                        $match->version,
+                        $match['software'],
+                        $match['version'],
                         implode(', ', $warning)
                     );
                 }

@@ -173,12 +173,12 @@ EOT;
         $result = $scanner->submitJob($packet);
         $this->log($output);
 
-        if ($result->Status != 'Success') {
-            $this->log($output, 'Result: <error>' . $result->Detail . '</error>', true);
+        if ($result['Status'] != 'Success') {
+            $this->log($output, 'Result: <error>' . $result['Detail'] . '</error>', true);
         } else {
-            $this->log($output, 'Result: <info>' . $result->Detail . '</info>', true);
+            $this->log($output, 'Result: <info>' . $result['Detail'] . '</info>', true);
             $this->log($output, '<info>The result will be available shortly at:</info>', true);
-            $this->log($output, $scanner->getJobUrl($result->Hash), true);
+            $this->log($output, $scanner->getJobUrl($result['Hash']), true);
         }
 
         $this->log($output);

@@ -37,7 +37,7 @@ class FingerprintCommandTest extends \PHPUnit_Framework_TestCase
 
         $scanner->expects($this->once())
             ->method('fingerprintFile')
-            ->will($this->returnValue(json_decode($json)));
+            ->will($this->returnValue(json_decode($json, true)));
 
         $application = $this->getMock('Shone\Scanner\Console\Application', array('getScanner'));
         $application->expects($this->once())
@@ -60,7 +60,7 @@ class FingerprintCommandTest extends \PHPUnit_Framework_TestCase
 
         $scanner->expects($this->once())
             ->method('fingerprintFile')
-            ->will($this->returnValue(json_decode($json)));
+            ->will($this->returnValue(json_decode($json, true)));
 
         $application = $this->getMock('Shone\Scanner\Console\Application', array('getScanner'));
         $application->expects($this->once())
@@ -111,7 +111,7 @@ class FingerprintCommandTest extends \PHPUnit_Framework_TestCase
 
         $scanner->expects($this->once())
             ->method('fingerprintFile')
-            ->will($this->returnValue(json_decode($json)));
+            ->will($this->returnValue(json_decode($json, true)));
 
         $application = $this->getMock('Shone\Scanner\Console\Application', array('getScanner'));
         $application->expects($this->once())

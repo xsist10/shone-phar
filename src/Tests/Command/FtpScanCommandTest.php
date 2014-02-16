@@ -64,7 +64,7 @@ class FtpScanCommandTest extends \PHPUnit_Framework_TestCase
 
         $scanner->expects($this->once())
             ->method('submitJob')
-            ->will($this->returnValue(json_decode($json)));
+            ->will($this->returnValue(json_decode($json, true)));
 
         $application = $this->getMock('Shone\Scanner\Console\Application', array('getScanner'));
         $application->expects($this->once())
@@ -114,7 +114,7 @@ class FtpScanCommandTest extends \PHPUnit_Framework_TestCase
 
         $scanner->expects($this->once())
             ->method('submitJob')
-            ->will($this->returnValue(json_decode($json)));
+            ->will($this->returnValue(json_decode($json, true)));
 
         $application = $this->getMock('Shone\Scanner\Console\Application', array('getScanner'));
         $application->expects($this->once())

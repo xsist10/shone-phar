@@ -81,23 +81,23 @@ EOT;
         $this->log($output, "<comment>Configuration</comment>");
 
         // Enable/disable CA certificate checks
-        $scanner->setCertCheck($input->hasOption('no-cert-check') ? false : $config->get('ssl-cert-check'));
+        $scanner->setCertCheck($input->getOption('no-cert-check') ? false : $config->get('ssl-cert-check'));
 
         // Do we have a key to use?
-        $key = $input->hasOption('key') ? $input->getOption('key') : $config->get('key');
+        $key = $input->getOption('key') ? $input->getOption('key') : $config->get('key');
         $this->log($output, ' Setting key to `' . $key . '`');
         $scanner->setKey($key);
 
         $this->log($output);
 
-        if ($input->hasOption('hash') && $input->getOption('hash')) {
+        if ($input->getOption('hash')) {
             $this->log($output, "<comment>Requesting job from remote server</comment>");
             $job = $scanner->getJob($input->getOption('hash'));
 
-            $software = count($job->result);
+            $software = count($job['result']);
             $this->log($output, "Found $software results.");
             if ($software) {
-                foreach ($job->result as $path => $results) {
+                foreach ($job['result'] as $path => $results) {
                     $this->log($output);
                     $this->log($output, "Path: $path");
 
@@ -107,22 +107,22 @@ EOT;
                     $data = array();
                     foreach ($results as $match) {
                         $warning = array();
-                        if ($match->is_deprecated) {
+                        if ($match['is_deprecated']) {
                             $warning[] = 'deprecated';
                         }
-                        if ($match->is_vulnerable) {
+                        if ($match['is_vulnerable']) {
                             $warning[] = 'vulnerable';
                         }
-                        if (!$match->is_vulnerable && !$match->is_deprecated) {
+                        if (!$match['is_vulnerable'] && !$match['is_deprecated']) {
                             $warning[] = 'secure';
                         }
 
                         $data[] = array(
-                            $match->name,
-                            $match->version,
+                            $match['name'],
+                            $match['version'],
                             implode(', ', $warning),
-                            ($match->risk) ? $match->risk . '/10' : 'N/A',
-                            $match->match
+                            ($match['risk']) ? $match['risk'] . '/10' : 'N/A',
+                            $match['match']
                         );
                     }
 
@@ -133,10 +133,10 @@ EOT;
         } else {
             $packet = array();
             // Build the filter packet
-            if ($input->hasOption('label') && $input->getOption('label')) {
+            if ($input->getOption('label')) {
                 $packet['label'] = $input->getOption('label');
             }
-            if ($input->hasOption('status') && $input->getOption('status')) {
+            if ($input->getOption('status')) {
                 switch ($input->getOption('status')) {
                     case 'secure':
                         $packet['is_vulnerable'] = '-1';
@@ -168,34 +168,34 @@ EOT;
 
                 foreach ($jobs as $job) {
                     $entry = array(
-                        date('Y-m-d', $job->ts_created),
-                        ($job->label ? substr($job->label, 0, 32) : $job->hash)
+                        date('Y-m-d', $job['ts_created']),
+                        ($job['label'] ? substr($job['label'], 0, 32) : $job['hash'])
                     );
 
-                    if ($job->processed) {
+                    if ($job['processed']) {
                         $warning = array();
-                        if ($job->is_deprecated) {
+                        if ($job['is_deprecated']) {
                             $warning[] = 'deprecated';
                         }
-                        if ($job->is_vulnerable) {
+                        if ($job['is_vulnerable']) {
                             $warning[] = 'vulnerable';
                         }
-                        if (!$job->is_vulnerable && !$job->is_deprecated) {
+                        if (!$job['is_vulnerable'] && !$job['is_deprecated']) {
                             $warning[] = 'secure';
                         }
 
                         $entry[] = implode(', ', $warning);
-                        $entry[] = ($job->severity ? $job->severity . '/10' : 'N/A');
-                        $entry[] = ($job->match_found+0) . ' bundle(s) found in ' . ($job->files+0) . ' file(s) on ' . $job->server;
-                    } elseif ($job->pending) {
+                        $entry[] = ($job['severity'] ? $job['severity'] . '/10' : 'N/A');
+                        $entry[] = ($job['match_found']+0) . ' bundle(s) found in ' . ($job['files']+0) . ' file(s) on ' . $job['server'];
+                    } elseif ($job['pending']) {
                         $entry[] = 'pending';
                         $entry[] = 'N/A';
                         $entry[] = 'Please check back later';
-                    } elseif ($job->processing) {
+                    } elseif ($job['processing']) {
                         $entry[] = 'processing';
                         $entry[] = 'N/A';
                         $entry[] = 'Result should be available in a few seconds';
-                    } elseif ($job->failed) {
+                    } elseif ($job['failed']) {
                         $entry[] = 'failed';
                         $entry[] = 'N/A';
                         $entry[] = 'Job failed to process';

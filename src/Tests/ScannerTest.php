@@ -15,8 +15,10 @@ use Shone\Scanner\Scanner;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Adapter\Local;
 
-use \Curl;
-use \CurlResponse;
+use Guzzle\Http\Client;
+use Guzzle\Http\Message\Request;
+use Guzzle\Http\Message\Response;
+
 use \ReflectionProperty;
 
 class ScannerTest extends \PHPUnit_Framework_TestCase
@@ -48,43 +50,62 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
         return $packet;
     }
 
+    private function _getScannerResult($status_code, $body)
+    {
+        // Build response object
+        $response = $this->getMockBuilder('Guzzle\Http\Message\Response', array('getStatusCode', 'json'))
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $response->expects($this->once())
+            ->method('getStatusCode')
+            ->will($this->returnValue($status_code));
+
+        $response->expects($this->any())
+            ->method('json')
+            ->will($this->returnValue(json_decode($body, true)));
+
+        // Build request object
+        $request = $this->getMockBuilder('Guzzle\Http\Message\Request', array('send'))
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $request->expects($this->once())
+            ->method('send')
+            ->will($this->returnValue($response));
+
+        // Build our Guzzle client
+        $client = $this->getMock('Guzzle\Http\Client', array('post', 'setBaseUrl', 'setSslVerification', 'setUserAgent'));
+        $client->expects($this->once())
+            ->method('post')
+            ->will($this->returnValue($request));
+
+        // Mock out our scanners client function so we can mock it out
+        $scanner = $this->getMock('Shone\Scanner\Scanner', array('getHttpClient'));
+        $scanner->expects($this->once())
+            ->method('getHttpClient')
+            ->will($this->returnValue($client));
+
+        return $scanner;
+    }
+
     public function testJobPostSuccess()
     {
-        $response = new CurlResponse(file_get_contents(__DIR__ . '/Fixtures/SuccessJobResult.txt'));
-
-        $curl = $this->getMock('\Curl', array('request'));
-        $curl->expects($this->once())
-             ->method('request')
-             ->will($this->returnValue($response));
-
-        $scanner = $this->getMock('Shone\Scanner\Scanner', array('getCurl'));
-        $scanner->expects($this->once())
-                ->method('getCurl')
-                ->will($this->returnValue($curl));
+        $scanner = $this->_getScannerResult(200, '{"Status":"Success","Hash":"48b0f534a391dfa38b023905381452bb","Detail":"38KB of usage remaining for the month."}');
 
         $scanner->setKey('invalid');
         $scanner->setCertCheck(true);
         $result = $scanner->submitJob($this->mockPacket());
-        $this->assertEquals('Success', $result->Status);
+        $this->assertEquals('Success', $result['Status']);
     }
 
     public function testJobPostFailed()
     {
-        $response = new CurlResponse(file_get_contents(__DIR__ . '/Fixtures/FailedJobResult.txt'));
-
-        $curl = $this->getMock('\Curl', array('request'));
-        $curl->expects($this->once())
-             ->method('request')
-             ->will($this->returnValue($response));
-
-        $scanner = $this->getMock('Shone\Scanner\Scanner', array('getCurl'));
-        $scanner->expects($this->once())
-                ->method('getCurl')
-                ->will($this->returnValue($curl));
+        $scanner = $this->_getScannerResult(200, '{"Status":"Failed","Detail":"Failed to create job: Exceeded limit by 3KB. Only 38KB remaining"}');
 
         $scanner->setKey('invalid');
         $result = $scanner->submitJob($this->mockPacket());
-        $this->assertEquals('Failed', $result->Status);
+        $this->assertEquals('Failed', $result['Status']);
     }
 
     /**
@@ -92,18 +113,7 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
      */
     public function testPostCaFail()
     {
-        $response = new CurlResponse('');
-        $response->headers['Status-Code'] = 0;
-
-        $curl = $this->getMock('\Curl', array('request'));
-        $curl->expects($this->once())
-             ->method('request')
-             ->will($this->returnValue($response));
-
-        $scanner = $this->getMock('Shone\Scanner\Scanner', array('getCurl'));
-        $scanner->expects($this->once())
-                ->method('getCurl')
-                ->will($this->returnValue($curl));
+        $scanner = $this->_getScannerResult(0, '');
 
         $result = $scanner->submitJob($this->mockPacket());
     }
@@ -113,18 +123,7 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
      */
     public function testPostStatusFail()
     {
-        $response = new CurlResponse('');
-        $response->headers['Status-Code'] = 10;
-
-        $curl = $this->getMock('\Curl', array('request'));
-        $curl->expects($this->once())
-             ->method('request')
-             ->will($this->returnValue($response));
-
-        $scanner = $this->getMock('Shone\Scanner\Scanner', array('getCurl'));
-        $scanner->expects($this->once())
-                ->method('getCurl')
-                ->will($this->returnValue($curl));
+        $scanner = $this->_getScannerResult(10, '');
 
         $result = $scanner->submitJob($this->mockPacket());
     }
@@ -134,25 +133,14 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
      */
     public function testPostContentFail()
     {
-        $response = new CurlResponse('');
-        $response->headers['Status-Code'] = 200;
-
-        $curl = $this->getMock('\Curl', array('request'));
-        $curl->expects($this->once())
-             ->method('request')
-             ->will($this->returnValue($response));
-
-        $scanner = $this->getMock('Shone\Scanner\Scanner', array('getCurl'));
-        $scanner->expects($this->once())
-                ->method('getCurl')
-                ->will($this->returnValue($curl));
+        $scanner = $this->_getScannerResult(200, '');
 
         $result = $scanner->submitJob($this->mockPacket());
     }
 
     public function testExcludeCommonChecksumsSuccess()
     {
-        $result = json_decode(json_encode(array('Status' => 'Success', 'Hashes' => array())));
+        $result = array('Status' => 'Success', 'Hashes' => array());
         $scanner = $this->getMock('Shone\Scanner\Scanner', array('post'));
         $scanner->expects($this->once())
                 ->method('post')
@@ -165,12 +153,12 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
     public function testGetCurl()
     {
         $scanner = new Scanner();
-        $this->assertInstanceOf('\Curl', $scanner->getCurl());
+        $this->assertInstanceOf('Guzzle\Http\Client', $scanner->getHttpClient());
     }
 
     public function testExcludeCommonChecksumsFailed()
     {
-        $result = json_decode(json_encode(array('Status' => 'Failed')));
+        $result = array('Status' => 'Failed');
         $scanner = $this->getMock('Shone\Scanner\Scanner', array('post'));
         $scanner->expects($this->once())
                 ->method('post')
@@ -187,10 +175,10 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
         $scanner = $this->getMock('Shone\Scanner\Scanner', array('post'));
         $scanner->expects($this->once())
             ->method('post')
-            ->will($this->returnValue(json_decode($json)));
+            ->will($this->returnValue(json_decode($json, true)));
 
         $result = $scanner->submitJob(array());
-        $this->assertEquals('Success', $result->Status);
+        $this->assertEquals('Success', $result['Status']);
     }
 
     public function testJobUrl()
@@ -215,10 +203,10 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertNotEmpty($packet);
         // Check that this file is in the list
-        $packet = json_decode($packet['job']);
+        $packet = json_decode($packet['job'], true);
         $found = false;
-        foreach ($packet->job->files->file as $file) {
-            $found |= strpos(__FILE__, ltrim($file->name, '/')) !== false;
+        foreach ($packet['job']['files']['file'] as $file) {
+            $found |= strpos(__FILE__, ltrim($file['name'], '/')) !== false;
         }
         $this->assertTrue((bool)$found);
     }
@@ -241,8 +229,8 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
 
         // Check that we don't have any files listed
         $this->assertNotEmpty($packet);
-        $packet = json_decode($packet['job']);
-        $this->assertTrue(empty($packet->job->files));
+        $packet = json_decode($packet['job'], true);
+        $this->assertTrue(empty($packet['job']['files']));
     }
 
     public function testJobPacketInvalidFile()
@@ -263,8 +251,8 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
 
         // Check that we don't have any files listed
         $this->assertNotEmpty($packet);
-        $packet = json_decode($packet['job']);
-        $this->assertTrue(empty($packet->job->files));
+        $packet = json_decode($packet['job'], true);
+        $this->assertTrue(empty($packet['job']['files']));
     }
 
     public function testFingerprintFile()
@@ -274,10 +262,10 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
         $scanner = $this->getMock('Shone\Scanner\Scanner', array('post'));
         $scanner->expects($this->once())
             ->method('post')
-            ->will($this->returnValue(json_decode($json)));
+            ->will($this->returnValue(json_decode($json, true)));
 
         $result = $scanner->fingerprintFile(__FILE__);
-        $this->assertEquals('Success', $result->Status);
+        $this->assertEquals('Success', $result['Status']);
     }
 
     public function testJobsView()
@@ -287,11 +275,11 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
         $scanner = $this->getMock('Shone\Scanner\Scanner', array('post'));
         $scanner->expects($this->once())
             ->method('post')
-            ->will($this->returnValue(json_decode($json)));
+            ->will($this->returnValue(json_decode($json, true)));
 
         $result = $scanner->getJobs();
-        $this->assertEquals('Completed', $result[0]->status);
-        $this->assertEquals('abc123', $result[0]->hash);
+        $this->assertEquals('Completed', $result[0]['status']);
+        $this->assertEquals('abc123', $result[0]['hash']);
     }
 
     public function testJobView()
@@ -301,15 +289,14 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
         $scanner = $this->getMock('Shone\Scanner\Scanner', array('post'));
         $scanner->expects($this->once())
             ->method('post')
-            ->will($this->returnValue(json_decode($json)));
+            ->will($this->returnValue(json_decode($json, true)));
 
         $response = $scanner->getJob('a');
-        $result = (array)$response->result;
-        $result = (array)$result['/'];
+        $result = $response['result']['/'];
         $result = array_shift($result);
-        $this->assertEquals('/', $result->path);
-        $this->assertEquals('Joomla!', $result->name);
-        $this->assertEquals('2.5.10', $result->version);
-        $this->assertEquals('96.00%', $result->match);
+        $this->assertEquals('/', $result['path']);
+        $this->assertEquals('Joomla!', $result['name']);
+        $this->assertEquals('2.5.10', $result['version']);
+        $this->assertEquals('96.00%', $result['match']);
     }
 }
