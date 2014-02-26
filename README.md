@@ -2,6 +2,7 @@ shone-phar
 =======
 
 [![Build Status](https://travis-ci.org/xsist10/shone-phar.png?branch=master)](https://travis-ci.org/xsist10/shone-phar)
+[![SensioLabsInsight](https://insight.sensiolabs.com/projects/8c5b02de-3d46-489e-b9aa-d181d011635c/mini.png)](https://insight.sensiolabs.com/projects/8c5b02de-3d46-489e-b9aa-d181d011635c)
 [![Coverage Status](https://coveralls.io/repos/xsist10/shone-phar/badge.png)](https://coveralls.io/r/xsist10/shone-phar)
 [![Latest Stable Version](https://poser.pugx.org/shone/scanner/version.png)](https://packagist.org/packages/shone/scanner)
 [![License](https://poser.pugx.org/shone/scanner/license.png)](https://packagist.org/packages/shone/scanner)
