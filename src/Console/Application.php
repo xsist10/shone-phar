@@ -12,7 +12,6 @@ namespace Shone\Scanner\Console;
 
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Formatter\OutputFormatter;
@@ -21,7 +20,6 @@ use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Shone\Scanner\Command;
 use Shone\Scanner\Config;
 use Shone\Scanner\Scanner;
-use Shone\Scanner\FtpScanner;
 
 /**
  * The application to handle the console commands
@@ -63,12 +61,6 @@ class Application extends BaseApplication
      */
     public function __construct()
     {
-        // We don't want to see xdebug output
-        if (function_exists('ini_set')) {
-            ini_set('xdebug.show_exception_trace', false);
-            ini_set('xdebug.scream', false);
-
-        }
         // Setup default timezone so we don't get bugged about it
         if (function_exists('date_default_timezone_set') && function_exists('date_default_timezone_get')) {
             date_default_timezone_set(@date_default_timezone_get());

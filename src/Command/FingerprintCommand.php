@@ -16,10 +16,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Command\Command;
 
-use Shone\Scanner\Scanner;
 use Shone\Scanner\Config;
-
-use \RuntimeException;
 
 /**
  * The fingerprint command identifies which software a file belongs to

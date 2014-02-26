@@ -11,7 +11,6 @@
 namespace Shone\Scanner;
 
 use Symfony\Component\Finder\Finder;
-use Symfony\Component\Process\Process;
 use Shone\Scanner\Config;
 
 /**
@@ -69,7 +68,7 @@ class Compiler
         $this->addFile($phar, new \SplFileInfo(__DIR__ . '/Console/Application.php'), false);
 
         // Add all vendor dependencies
-        foreach (array('symfony', 'guzzle', 'league') as $vendor) {
+        foreach (array('symfony', 'guzzle/guzzle/src/Guzzle', 'league/flysystem/src') as $vendor) {
             $finder = new Finder();
             $finder->files()
                 ->ignoreVCS(true)
@@ -109,9 +108,6 @@ class Compiler
         $phar->setStub($this->getStub());
 
         $phar->stopBuffering();
-
-        // disabled for interoperability with systems without gzip ext
-        // $phar->compressFiles(\Phar::GZ);
 
         $this->addFile($phar, new \SplFileInfo(__DIR__.'/../LICENSE'), false);
 

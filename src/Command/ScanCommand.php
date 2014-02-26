@@ -19,10 +19,7 @@ use Symfony\Component\Console\Command\Command;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Adapter\Local;
 
-use Shone\Scanner\Scanner;
 use Shone\Scanner\Config;
-
-use \RuntimeException;
 
 /**
  * The scan command performs the security scan

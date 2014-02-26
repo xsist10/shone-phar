@@ -10,12 +10,10 @@
 
 namespace Shone\Scanner;
 
-use Symfony\Component\Finder\Finder;
 use League\Flysystem\Filesystem;
 use Guzzle\Http\Client;
 
 use \Exception;
-use \LogicException;
 use \RuntimeException;
 
 /**
@@ -116,6 +114,12 @@ class Scanner
         $headers = array(
             'Accept-Encoding' => 'application/json'
         );
+
+        // Work around for Guzzle not clearing out old cacert files
+        $cert_file = sys_get_temp_dir() . '/guzzle-cacert.pem';
+        if (is_file($cert_file) && is_writable($cert_file)) {
+            unlink($cert_file);
+        }
 
         $client = $this->getHttpClient();
         $client->setBaseUrl(self::API_ENDPOINT);
@@ -307,7 +311,6 @@ class Scanner
         {
             // We had a problem examining the file. It might be because
             // the file no longer exists or we don't have permission to read it
-            // TODO: Report on number of issues
             return null;
         }
     }
