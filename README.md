@@ -93,6 +93,66 @@ There are a number of additional FTP options which will be listed if you run:
     $ ./shone.phar ftpscan --help
 
 
+Getting results
+-----
+
+**Get one job result**
+
+When you submit a job to the API, you will get a URL that will link directly to your scan result. You can also use the hash value to pull the result via the API like this:
+
+    $ ./shone.phar job --hash="[HASH]"
+
+
+Expected result:
+
+    Found 2 results.
+
+    Path: /
+    +----------+---------+------------+-------+--------+
+    | Software | Version | Status     | Risk  | Match  |
+    +----------+---------+------------+-------+--------+
+    | Joomla!  | 2.5.10  | vulnerable | 10/10 | 97.00% |
+    | Joomla!  | 2.5.11  | vulnerable | 10/10 | 96.00% |
+    | Joomla!  | 2.5.12  | vulnerable | 10/10 | 94.00% |
+    | Joomla!  | 2.5.13  | vulnerable | 10/10 | 94.00% |
+    | Joomla!  | 2.5.14  | vulnerable | 7/10  | 94.00% |
+    +----------+---------+------------+-------+--------+
+
+    Path: media/editors/tinymce/jscripts/tiny_mce
+    +----------+---------+--------+------+--------+
+    | Software | Version | Status | Risk | Match  |
+    +----------+---------+--------+------+--------+
+    | tinymce  | 3.5.2   | secure | N/A  | 10.00% |
+    | tinymce  | 3.5.3   | secure | N/A  | 10.00% |
+    | tinymce  | 3.5.4   | secure | N/A  | 10.00% |
+    | tinymce  | 3.5.4.1 | secure | N/A  | 10.00% |
+    | tinymce  | 3.5.3.1 | secure | N/A  | 10.00% |
+    +----------+---------+--------+------+--------+
+
+
+**Get recent jobs**
+
+You can pull the jobs for the month by calling this:
+
+    $ ./shone.phar job --key="[API KEY]"
+
+
+Expected result:
+
+    Found 1 job(s).
+
+    +------------+----------------------------------+------------+----------+------------------------------------------------------+
+    | Date       | Job                              | Status     | Severity | Details                                              |
+    +------------+----------------------------------+------------+----------+------------------------------------------------------+
+    | 2014-04-13 | 14dd8544av1f6f2ea1d55319625f7744 | vulnerable | 10/10    | 2 bundle(s) found in 4444 file(s) on xxx.xxx.xxx.xxx |
+    +------------+----------------------------------+------------+----------+------------------------------------------------------+
+
+
+You can search for the latest scan for a particular label by using the label flag
+
+    $ ./shone.phar job --key="[API KEY]" --label="Website Label"
+
+
 
 Compiling the phar
 -----
@@ -110,6 +170,67 @@ For more information run:
 
     $ ./shone.phar
 
+
+Using the library directly
+-----
+
+If you wish to write your own code to use the Shone API, you can use the library directly like this:
+
+
+```php
+
+use Shone\Scanner\Scanner;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Adapter\Local;
+
+$scanner = new Scanner();
+
+// Set your API key
+$scanner->setKey([API KEY]);
+
+// Enable SSL certificate checking
+$scanner->setCertCheck(true);
+
+// Set the label of the job you want to submit or search for
+$scanner->setLabel("Website Label");
+
+// You can build a list of files anyway you want like:
+// $files = array('/path/to/file1', '/path/to/file2');
+// I find the easiest way is like this:
+$filesystem = new Filesystem(new Local("path/to/scan"));
+$files = $scanner->buildFileList($filesystem);
+
+// Build our packet to send to the API
+$packet = $scanner->buildJobPacket($filesystem, $files);
+
+// Send the packet to the framework
+$result = $scanner->submitJob($packet);
+
+if ($result['Status'] != 'Success') {
+    // Something went wrong
+    throw new \Exception($result['Detail']);
+} else {
+    $hash = $result['Hash'];
+}
+
+// Wait a little while and attempt to get the result (might take a few seconds to process)
+$max_retry = 5;
+$attempt = 1;
+while ($attempt < $max_retry)
+{
+    sleep(2);
+    $job = $scanner->getJob($hash);
+    if (empty($job['status']) || $job['status'] != 'In progress')
+    {
+        break;
+    }
+    $attempt++;
+}
+
+// The job result:
+print_r($job);
+
+```
 
 
 Contributing
