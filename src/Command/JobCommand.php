@@ -17,6 +17,8 @@ use Symfony\Component\Console\Command\Command;
 
 use Shone\Scanner\Config;
 
+use \Exception;
+
 /**
  * The job command returns a list of jobs based on various filters
  *
@@ -89,6 +91,18 @@ EOT;
         if ($input->getOption('hash')) {
             $this->log($output, "<comment>Requesting job from remote server</comment>");
             $job = $scanner->getJob($input->getOption('hash'));
+
+            // Bad job result
+            if (empty($job))
+            {
+                throw new Exception('Invalid job result received.');
+            }
+
+            // Job still being processed?
+            if (!empty($job['status']) && $job['status'] == 'In progress')
+            {
+                throw new Exception('Job still being processed.');
+            }
 
             $software = count($job['result']);
             $this->log($output, "Found $software results.");
