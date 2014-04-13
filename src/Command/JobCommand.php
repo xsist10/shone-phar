@@ -95,13 +95,17 @@ EOT;
             // Bad job result
             if (empty($job))
             {
-                throw new Exception('Invalid job result received.');
+                $this->log($output, '<error>Invalid job result received.</error>');
+                $this->log($output);
+                return;
             }
 
             // Job still being processed?
             if (!empty($job['status']) && $job['status'] == 'In progress')
             {
-                throw new Exception('Job still being processed.');
+                $this->log($output, '<warning>Job still being processed.<warning>');
+                $this->log($output);
+                return;
             }
 
             $software = count($job['result']);
