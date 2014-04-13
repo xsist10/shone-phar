@@ -17,8 +17,6 @@ use Symfony\Component\Console\Command\Command;
 
 use Shone\Scanner\Config;
 
-use \Exception;
-
 /**
  * The job command returns a list of jobs based on various filters
  *
