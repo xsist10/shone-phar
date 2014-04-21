@@ -10,6 +10,7 @@
 
 namespace Shone\Scanner\Tests\Command;
 
+use Shone\Scanner\Scanner;
 use Shone\Scanner\Console\Application;
 use Shone\Scanner\Command\SelfUpdateCommand;
 use Shone\Scanner\Utils\RemoteFileSystem;
@@ -55,7 +56,7 @@ class SelfUpdateCommandTest extends \PHPUnit_Framework_TestCase
         $rfs = $this->getMock('Shone\Scanner\Utils\RemoteFileSystem');
         $rfs->expects($this->atLeastOnce())
             ->method('getFile')
-            ->will($this->returnValue(json_encode(array('version' => '@package_version@'))));
+            ->will($this->returnValue(json_encode(array('version' => Scanner::VERSION))));
 
         $command = $this->getMock('Shone\Scanner\Command\SelfUpdateCommand', array('getRemoteFileSystem'));
 

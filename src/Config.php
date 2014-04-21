@@ -41,8 +41,31 @@ class Config
      * @var array
      */
     public static $defaultConfig = array(
-        'ignore-ext'        => array(),
-        'ssl-cert-check'    => 1
+        'ssl-cert-check'    => 1,
+        'ignore-ext'        => array(
+            'avi',
+            'bmp',
+            'doc',
+            'docx',
+            'gif',
+            'ico',
+            'jpeg',
+            'jpg',
+            'json',
+            'lock',
+            'log',
+            'md',
+            'mkv',
+            'mp3',
+            'mpeg',
+            'mpg',
+            'pdf',
+            'png',
+            'tar',
+            'txt',
+            'yml',
+            'zip'
+        )
     );
 
     /**
@@ -54,11 +77,6 @@ class Config
      * @var string
      */
     private $config_file;
-
-    /**
-     * @var string
-     */
-    private $home_file;
 
     /**
      * Build a new config object
@@ -80,15 +98,8 @@ class Config
             $home = getcwd();
         }
 
-        $this->home_file = $home . '/shone.json';
-
         // Attempt to load a custom config
-        $this->config_file = realpath($this->home_file);
-        if (!is_readable($this->config_file))
-        {
-            // Failing that, default to the bundled one
-            $this->config_file = __DIR__ . '/../res/config.json';
-        }
+        $this->config_file = $home . '/shone.json';
         if (is_file($this->config_file) && is_readable($this->config_file)) {
             $json = json_decode(file_get_contents($this->config_file), true);
             $this->merge($json);
@@ -113,7 +124,7 @@ class Config
      */
     public function save()
     {
-        return file_put_contents($this->home_file, json_encode($this->config)) > 0;
+        return file_put_contents($this->config_file, json_encode($this->config)) > 0;
     }
 
     /**

@@ -25,7 +25,7 @@ use \RuntimeException;
  */
 class Scanner
 {
-    const VERSION = '@package_version@';
+    const VERSION = '1.1.3';
     const RELEASE_DATE = '@release_date@';
 
     const USER_AGENT = 'Shone PHAR Client';
@@ -84,15 +84,10 @@ class Scanner
      * Get the user-agent to pass for the scanner
      *
      * @return string
-     * @codeCoverageIgnore
      */
     protected function getUserAgent()
     {
-        if (self::VERSION == '@package_version@') {
-            return self::USER_AGENT . ' - dev';
-        } else {
-            return self::USER_AGENT . ' - ' . self::VERSION;
-        }
+        return self::USER_AGENT . ' - ' . self::VERSION;
     }
 
     /**

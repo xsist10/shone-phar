@@ -101,9 +101,6 @@ class Compiler
         }
         $this->addShoneBin($phar);
 
-        // Add resources
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../res/config.json'));
-
         // Stubs
         $phar->setStub($this->getStub());
 
@@ -125,7 +122,6 @@ class Compiler
             $content = "\n".$content."\n";
         }
 
-        $content = str_replace('@package_version@', $this->version, $content);
         $content = str_replace('@release_date@', $this->versionDate, $content);
 
         $phar->addFromString($path, $content);
