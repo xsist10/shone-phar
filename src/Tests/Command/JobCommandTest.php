@@ -104,4 +104,22 @@ class JobCommandTest extends \PHPUnit_Framework_TestCase
         $this->assertRegExp('/| Joomla!  | 2.5.10  | vulnerable | 10\/10 | 96.00% |/', $display);
         $this->assertRegExp('/| tinymce  | 3.5.2   | deprecated | N\/A  | 10.00% |/', $display);
     }
+
+    public function testPendingJob()
+    {
+        $json = '{"status":"In progress"}';
+        $parameters = array('--hash' => 'abc123');
+        $display = $this->runCommand('getJob', $parameters, $json);
+
+        $this->assertRegExp('/Job still being processed/', $display);
+    }
+
+    public function testEmptyJob()
+    {
+        $json = '';
+        $parameters = array('--hash' => 'abc123');
+        $display = $this->runCommand('getJob', $parameters, $json);
+
+        $this->assertRegExp('/Invalid job result received/', $display);
+    }
 }

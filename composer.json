@@ -1,6 +1,6 @@
 {
     "name": "shone/scanner",
-    "description": "Software Version Scanner",
+    "description": "A scanner to determine if the version of the popular open source software you are running is vulnerable.",
     "keywords": ["version", "scanner", "security", "vulnerability"],
     "homepage": "https://www.shone.co.za/",
     "type": "tool",

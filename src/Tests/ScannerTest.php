@@ -194,7 +194,7 @@ class ScannerTest extends \PHPUnit_Framework_TestCase
 
         $property = new ReflectionProperty('Shone\Scanner\Scanner', 'common_checksums');
         $property->setAccessible(true);
-        $property->setValue($scanner, array('742b794187af3520e8a991e207660493' => true));
+        $property->setValue($scanner, array('d41d8cd98f00b204e9800998ecf8427e' => true));
 
         $files = $scanner->buildFileList($filesystem, '', array('txt'));
         $files[] = "non_existant_file";

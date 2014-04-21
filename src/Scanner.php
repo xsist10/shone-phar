@@ -117,9 +117,11 @@ class Scanner
 
         // Work around for Guzzle not clearing out old cacert files
         $cert_file = sys_get_temp_dir() . '/guzzle-cacert.pem';
+        // @codeCoverageIgnoreStart
         if (is_file($cert_file) && is_writable($cert_file)) {
             unlink($cert_file);
         }
+        // @codeCoverageIgnoreEnd
 
         $client = $this->getHttpClient();
         $client->setBaseUrl(self::API_ENDPOINT);
@@ -294,6 +296,7 @@ class Scanner
             $context = hash_init('md5');
             hash_update_stream($context, $stream);
             $md5 = hash_final($context);
+
             // Close the resource to release the handle
             fclose($stream);
 

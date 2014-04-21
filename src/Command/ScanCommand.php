@@ -135,6 +135,11 @@ EOT;
 
         // Determine the path we're going to scan
         $this->log($output, ' Setting path to `' . $config['path'] . '`');
+        if (!is_dir($config['path']) || !is_readable($config['path'])) {
+            $this->log($output, '<error>Unable to read the path specified.</error>', true);
+            $this->log($output);
+            return false;
+        }
 
         // Has the user specified a label?
         $this->log($output, ' Setting label to `' . $config['label'] .'`');

@@ -37,23 +37,83 @@ namespace Shone\Scanner;
  */
 class Config
 {
+    /**
+     * @var array
+     */
     public static $defaultConfig = array(
         'ignore-ext'        => array(),
         'ssl-cert-check'    => 1
     );
 
+    /**
+     * @var array
+     */
     private $config;
 
+    /**
+     * @var string
+     */
+    private $config_file;
+
+    /**
+     * @var string
+     */
+    private $home_file;
+
+    /**
+     * Build a new config object
+     *
+     * @return Shone\Scanner\Config
+     * @codeCoverageIgnore
+     */
     public function __construct()
     {
         // load defaults
         $this->config = static::$defaultConfig;
 
-        $jsonConfig = __DIR__ . '/../res/config.json';
-        if (is_file($jsonConfig) && is_readable($jsonConfig)) {
-            $json = json_decode(file_get_contents($jsonConfig), true);
+        // Get home directory
+        if (isset($_SERVER['HOME'])) {
+            $home = $_SERVER['HOME'];
+        } elseif (isset($_SERVER['HOMEDRIVE']) && isset($_SERVER['HOMEPATH'])) {
+            $home = $_SERVER['HOMEDRIVE'] . '/' . $_SERVER['HOMEPATH'];
+        } else {
+            $home = getcwd();
+        }
+
+        $this->home_file = $home . '/shone.json';
+
+        // Attempt to load a custom config
+        $this->config_file = realpath($this->home_file);
+        if (!is_readable($this->config_file))
+        {
+            // Failing that, default to the bundled one
+            $this->config_file = __DIR__ . '/../res/config.json';
+        }
+        if (is_file($this->config_file) && is_readable($this->config_file)) {
+            $json = json_decode(file_get_contents($this->config_file), true);
             $this->merge($json);
         }
+    }
+
+    /**
+     * Returns the path to the config file
+     *
+     * @return string
+     */
+    public function getConfigFile()
+    {
+        return $this->config_file;
+    }
+
+    /**
+     * Save the config file to the home folder of the user
+     *
+     * @return boolean
+     * @codeCoverageIgnore
+     */
+    public function save()
+    {
+        return file_put_contents($this->home_file, json_encode($this->config)) > 0;
     }
 
     /**
@@ -69,6 +129,20 @@ class Config
                 $this->config[$key] = $val;
             }
         }
+    }
+
+    /**
+     * Set a key
+     *
+     * @param string $key   Key of the config
+     * @param string $value Value of the config
+     *
+     * @return Shone\Scanner\Config
+     */
+    public function set($key, $value)
+    {
+        $this->config[$key] = $value;
+        return $this;
     }
 
     /**

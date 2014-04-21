@@ -157,6 +157,7 @@ class Application extends BaseApplication
     {
         $commands = parent::getDefaultCommands();
         $commands[] = new Command\AboutCommand();
+        $commands[] = new Command\SetConfigCommand();
         $commands[] = new Command\ScanCommand();
         $commands[] = new Command\FtpScanCommand();
         $commands[] = new Command\JobCommand();
@@ -174,6 +175,6 @@ class Application extends BaseApplication
      */
     public function getLongVersion()
     {
-        return parent::getLongVersion() . ' ' . Scanner::RELEASE_DATE;
+        return parent::getLongVersion() . ' ' . Scanner::RELEASE_DATE . "\nConfig File: " . $this->getConfig()->getConfigFile();
     }
 }

@@ -37,4 +37,12 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(null, $config->get('non-existant-key'));
         $this->assertEquals(1, $config->get('ssl-cert-check'));
     }
+
+    public function testSet()
+    {
+        $config = new Config();
+        $this->assertEquals(1, $config->get('ssl-cert-check'));
+        $config->set('ssl-cert-check', 0);
+        $this->assertEquals(0, $config->get('ssl-cert-check'));
+    }
 }

@@ -87,7 +87,7 @@ EOT;
         }
 
         // Do we have a key to use?
-        $key = $input->hasOption('key') ? $input->getOption('key') : $config->get('key');
+        $key = $input->getOption('key') ? $input->getOption('key') : $config->get('key');
         $this->log($output, ' Setting key to `' . $key . '`');
         $scanner->setKey($key);
 
@@ -103,12 +103,12 @@ EOT;
         } else {
             $this->log($output, 'Result: <info>' . $result['Detail'] . '</info>', true);
 
-            $table = $this->getApplication()->getHelperSet()->get('table');
-            $table->setHeaders(array('Software', 'Version', 'Status'));
-
-            $data = array();
-
             if (!empty($result['Matches'])) {
+                $table = $this->getApplication()->getHelperSet()->get('table');
+                $table->setHeaders(array('Software', 'Version', 'Status'));
+
+                $data = array();
+
                 foreach ($result['Matches'] as $match) {
                     $warning = array();
                     if ($match['is_malicious']) {
@@ -127,10 +127,10 @@ EOT;
                         implode(', ', $warning)
                     );
                 }
-            }
 
-            $table->setRows($data);
-            $table->render($output);
+                $table->setRows($data);
+                $table->render($output);
+            }
         }
 
         $this->log($output);

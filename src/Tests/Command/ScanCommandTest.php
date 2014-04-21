@@ -76,6 +76,16 @@ class ScanCommandTest extends \PHPUnit_Framework_TestCase
         $this->assertRegExp('/Because/', $commandTester->getDisplay());
     }
 
+    public function testInvalidPath()
+    {
+        $command = new ScanCommand();
+        $command->setApplication(new Application());
+
+        $commandTester = new CommandTester($command);
+        $commandTester->execute(array('path' => '/random/path'));
+        $this->assertRegExp('/Unable to read the path specified/', $commandTester->getDisplay());
+    }
+
     public function testExecuteForCommandAlias()
     {
         // Mock the scanner

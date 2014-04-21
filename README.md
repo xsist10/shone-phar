@@ -38,6 +38,18 @@ If you are using the `shone.phar` file, you can update it to the latest version 
     $ ./shone.phar self-update
 
 
+Setting up your configuration
+-----
+
+There are some basic settings that make it easier to use the tool. It's recommended to set your API key at the start (the configuration file will be stored in your home folder ~/shone.json or similar location).
+
+    # Set the API key so you don't need to declare it everywhere
+    $ ./shone.phar set-config --key "[API KEY]"
+
+    # This is not recommended
+    $ ./shone.phar set-config  --common-checksum=0 --no-cert-check=1
+
+
 Using the scanner
 -----
 
