@@ -11,7 +11,6 @@
 namespace Shone\Scanner;
 
 use Symfony\Component\Finder\Finder;
-use Shone\Scanner\Config;
 
 use \Phar;
 use \SplFileInfo;
@@ -39,8 +38,6 @@ class Compiler
         if (file_exists($pharFile)) {
             unlink($pharFile);
         }
-
-        $config = new Config();
 
         $phar = new Phar($pharFile, 0, 'shone.phar');
         $phar->setSignatureAlgorithm(Phar::SHA1);
