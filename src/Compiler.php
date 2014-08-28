@@ -13,6 +13,9 @@ namespace Shone\Scanner;
 use Symfony\Component\Finder\Finder;
 use Shone\Scanner\Config;
 
+use \Phar;
+use \SplFileInfo;
+
 /**
  * The Compiler class compiles shone into a phar
  *
@@ -20,11 +23,6 @@ use Shone\Scanner\Config;
  */
 class Compiler
 {
-    /**
-     * @var string
-     */
-    private $version;
-
     /**
      * @var string
      */
@@ -43,15 +41,14 @@ class Compiler
         }
 
         $config = new Config();
-        $this->version = $config->get('version');
 
-        $phar = new \Phar($pharFile, 0, 'shone.phar');
-        $phar->setSignatureAlgorithm(\Phar::SHA1);
+        $phar = new Phar($pharFile, 0, 'shone.phar');
+        $phar->setSignatureAlgorithm(Phar::SHA1);
 
         $phar->startBuffering();
 
         // Add scanner files
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/bootstrap.php'));
+        $this->addFile($phar, new SplFileInfo(__DIR__.'/bootstrap.php'));
 
         $finder = new Finder();
         $finder->files()
@@ -65,7 +62,7 @@ class Compiler
         foreach ($finder as $file) {
             $this->addFile($phar, $file);
         }
-        $this->addFile($phar, new \SplFileInfo(__DIR__ . '/Console/Application.php'), false);
+        $this->addFile($phar, new SplFileInfo(__DIR__ . '/Console/Application.php'), false);
 
         // Add all vendor dependencies
         foreach (array('symfony', 'guzzle/guzzle/src/Guzzle', 'league/flysystem/src') as $vendor) {
@@ -87,17 +84,17 @@ class Compiler
         }
 
         // Add autoloading files
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/autoload.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/ClassLoader.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/autoload_namespaces.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/autoload_classmap.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/autoload_real.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/autoload_files.php'));
+        $this->addFile($phar, new SplFileInfo(__DIR__.'/../vendor/autoload.php'));
+        $this->addFile($phar, new SplFileInfo(__DIR__.'/../vendor/composer/ClassLoader.php'));
+        $this->addFile($phar, new SplFileInfo(__DIR__.'/../vendor/composer/autoload_namespaces.php'));
+        $this->addFile($phar, new SplFileInfo(__DIR__.'/../vendor/composer/autoload_classmap.php'));
+        $this->addFile($phar, new SplFileInfo(__DIR__.'/../vendor/composer/autoload_real.php'));
+        $this->addFile($phar, new SplFileInfo(__DIR__.'/../vendor/composer/autoload_files.php'));
         if (file_exists(__DIR__.'/../vendor/composer/autoload_psr4.php')) {
-            $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/autoload_psr4.php'));
+            $this->addFile($phar, new SplFileInfo(__DIR__.'/../vendor/composer/autoload_psr4.php'));
         }
         if (file_exists(__DIR__.'/../vendor/composer/include_paths.php')) {
-            $this->addFile($phar, new \SplFileInfo(__DIR__.'/../vendor/composer/include_paths.php'));
+            $this->addFile($phar, new SplFileInfo(__DIR__.'/../vendor/composer/include_paths.php'));
         }
         $this->addShoneBin($phar);
 
@@ -106,12 +103,12 @@ class Compiler
 
         $phar->stopBuffering();
 
-        $this->addFile($phar, new \SplFileInfo(__DIR__.'/../LICENSE'), false);
+        $this->addFile($phar, new SplFileInfo(__DIR__.'/../LICENSE'), false);
 
         unset($phar);
     }
 
-    private function addFile($phar, $file, $strip = true)
+    private function addFile(Phar $phar, SplFileInfo $file, $strip = true)
     {
         $path = str_replace(getcwd() . DIRECTORY_SEPARATOR, '', $file->getRealPath());
 
@@ -164,7 +161,7 @@ class Compiler
         return $output;
     }
 
-    private function addShoneBin($phar)
+    private function addShoneBin(Phar $phar)
     {
         $content = file_get_contents(__DIR__.'/../bin/shone');
         $content = preg_replace('{^#!/usr/bin/env php\s*}', '', $content);

@@ -6,7 +6,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 if (!function_exists('curl_init')) {
-    die('Please install cURL and enable it for PHP.');
+    die("Please install cURL and enable it for PHP.\n");
 }
 
 require __DIR__ . '/../src/bootstrap.php';

@@ -25,7 +25,7 @@ use \RuntimeException;
  */
 class Scanner
 {
-    const VERSION = '1.1.3';
+    const VERSION = '1.1.4';
     const RELEASE_DATE = '@release_date@';
 
     const USER_AGENT = 'Shone PHAR Client';
