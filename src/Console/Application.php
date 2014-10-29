@@ -63,7 +63,7 @@ class Application extends BaseApplication
     {
         // Setup default timezone so we don't get bugged about it
         if (function_exists('date_default_timezone_set') && function_exists('date_default_timezone_get')) {
-            date_default_timezone_set(@date_default_timezone_get());
+            date_default_timezone_set(date_default_timezone_get());
         }
 
         parent::__construct('Shone Security Scanner', Scanner::VERSION);
@@ -131,7 +131,7 @@ class Application extends BaseApplication
      */
     public function getScanner()
     {
-        if ($this->scanner == null) {
+        if ($this->scanner === null) {
             $this->scanner = new Scanner();
         }
 

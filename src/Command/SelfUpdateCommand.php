@@ -79,7 +79,7 @@ EOT;
         }
 
         $rfs = $this->getRemoteFileSystem();
-        $latest = @json_decode($rfs->getFile('raw.github.com/xsist10/shone-phar/master/res/config.json'));
+        $latest = json_decode($rfs->getFile('raw.github.com/xsist10/shone-phar/master/res/config.json'));
         if (!$latest) {
             $output->writeln("<error>Unable to retrieve remote version file.</error>");
         } elseif (Scanner::VERSION !== $latest->version) {

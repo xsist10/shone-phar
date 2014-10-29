@@ -276,7 +276,7 @@ class Scanner
         {
             // If the file is over a certain size, ignore it. This
             // prevents large downloads from remote Filesystems.
-            if ((int)@$filesystem->getSize($file) > self::MAX_FILE_SIZE) {
+            if ((int)$filesystem->getSize($file) > self::MAX_FILE_SIZE) {
                 return null;
             }
 
