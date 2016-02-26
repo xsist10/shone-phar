@@ -14,6 +14,8 @@ Getting started
 
 **To perform scans you will need to create a free account on https://www.shone.co.za/**
 
+***To get an API Key, log into your account and go to the API tab (https://www.shone.co.za/client/api)***
+
 The easiest way is to just download the phar file and get started
 
     $ wget raw.github.com/xsist10/shone-phar/master/shone.phar && chmod +x shone.phar
